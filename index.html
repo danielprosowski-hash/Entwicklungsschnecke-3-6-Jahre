@@ -96,6 +96,19 @@
   .txt{flex:1; min-width:0}
   .txt b{font-weight:650}
   .txt span{color:var(--muted); font-size:13px}
+
+  #offenePanel .obereich{margin-top:16px}
+  #offenePanel .obereich:first-of-type{margin-top:10px}
+  #offenePanel .ohead{
+    display:flex; align-items:center; gap:10px; padding:6px 8px; border-radius:8px; font-weight:700; font-size:13.5px;
+    border-left:6px solid var(--c);
+  }
+  #offenePanel .ostat{margin-left:auto; font-weight:500; color:var(--muted); font-size:12.5px; font-variant-numeric:tabular-nums}
+  #offenePanel .oitems{padding:2px 8px 4px}
+  #offenePanel .oitem{display:flex; gap:12px; align-items:center; padding:7px 8px; border-top:1px solid var(--line)}
+  #offenePanel .oitem:first-child{border-top:none}
+  #offenePanel .oempty{padding:10px 8px; color:var(--muted); font-size:13px}
+  #offenePanel .oall-done{padding:14px 8px; color:var(--muted); font-size:14px; text-align:center}
   /* two-part clickable box */
   .box{
     flex:0 0 auto; width:76px; height:40px; border:2px solid var(--c); border-radius:9px;
@@ -133,38 +146,61 @@
   .hint{font-size:12px; color:var(--muted); margin-top:6px}
   svg#wheel{width:100%; height:auto; display:block}
 
-  /* Druckkopf – nur beim Drucken sichtbar */
-  #printHead{display:none}
-  #printHead .ph-top{display:flex; align-items:center; gap:16px; border-bottom:2px solid var(--ink); padding-bottom:10px}
-  #printHead .ph-top img{height:74px; width:auto}
-  #printHead .ph-titles{flex:1}
-  #printHead .ph-h1{font-size:22px; font-weight:700}
-  #printHead .ph-sub{color:#555; font-size:12px}
-  #printHead .ph-kid{display:flex; gap:22px}
-  #printHead .ph-kid > div{display:flex; flex-direction:column}
-  #printHead .ph-kid span{font-size:10px; color:#777; text-transform:uppercase; letter-spacing:.04em}
-  #printHead .ph-kid b{font-size:15px}
-  #printHead #printWheel{width:100%; text-align:center; margin-top:2mm}
-  #printHead #printWheel svg{width:min(91vw,188mm,62vh); height:min(91vw,188mm,62vh); max-width:100%; aspect-ratio:1/1; display:inline-block}
-  #printHead .ph-legend{margin-top:4px; font-size:11px; color:#555; display:flex; gap:22px; justify-content:center}
-  #printHead .ph-legend b{font-weight:700; color:var(--ink)}
+  /* Druckkopf – nur beim Drucken sichtbar (Elternblatt und Fachkraft-Blatt teilen sich die Stile) */
+  #printHead, #printFach{display:none}
+  #printHead .ph-top, #printFach .ph-top{display:flex; align-items:center; gap:16px; border-bottom:2px solid var(--ink); padding-bottom:10px}
+  #printHead .ph-top img, #printFach .ph-top img{height:74px; width:auto}
+  #printHead .ph-titles, #printFach .ph-titles{flex:1}
+  #printHead .ph-h1, #printFach .ph-h1{font-size:22px; font-weight:700}
+  #printFach .ph-h1{font-size:18px}
+  #printHead .ph-sub, #printFach .ph-sub{color:#555; font-size:12px}
+  #printHead .ph-kid, #printFach .ph-kid{display:flex; gap:22px}
+  #printHead .ph-kid > div, #printFach .ph-kid > div{display:flex; flex-direction:column}
+  #printHead .ph-kid span, #printFach .ph-kid span{font-size:10px; color:#777; text-transform:uppercase; letter-spacing:.04em}
+  #printHead .ph-kid b, #printFach .ph-kid b{font-size:15px}
+  #printHead #printWheel, #printFach #printWheelFach{width:100%; text-align:center; margin-top:2mm}
+  #printHead #printWheel svg, #printFach #printWheelFach svg{width:min(91vw,188mm,62vh); height:min(91vw,188mm,62vh); max-width:100%; aspect-ratio:1/1; display:inline-block}
+  #printHead .ph-legend, #printFach .ph-legend{margin-top:4px; font-size:11px; color:#555; display:flex; gap:22px; justify-content:center}
+  #printHead .ph-legend b, #printFach .ph-legend b{font-weight:700; color:var(--ink)}
+  #printHead .ph-stats, #printFach .ph-stats{margin-top:10px; border-top:1px solid #ddd; padding-top:8px}
+  #printHead .ph-stats-title, #printFach .ph-stats-title{font-size:12px; font-weight:700; margin-bottom:6px; text-align:center; color:#444}
+  .pf-gesamt{font-weight:500; color:#777; font-size:11px}
+  #printHead .ph-stats-grid, #printFach .ph-stats-grid{display:grid; grid-template-columns:1fr 1fr; gap:6px 22px; max-width:178mm; margin:0 auto}
+  #printHead .ph-stat-row, #printFach .ph-stat-row{display:grid; grid-template-columns:46mm 1fr 15mm; align-items:center; gap:7px; font-size:9.5px}
+  #printHead .ph-stat-row .nm, #printFach .ph-stat-row .nm{font-weight:600; line-height:1.15}
+  #printHead .ph-stat-row .bar, #printFach .ph-stat-row .bar{height:6px; background:#eee; border-radius:4px; overflow:hidden}
+  #printHead .ph-stat-row .bar i, #printFach .ph-stat-row .bar i{display:block; height:100%}
+  #printHead .ph-stat-row .val, #printFach .ph-stat-row .val{color:#666; font-variant-numeric:tabular-nums; text-align:right; white-space:nowrap}
   .wheel-dot{cursor:pointer}
   .footer-note{color:var(--muted); font-size:12px; padding:0 20px 30px}
 
-  /* print – genau eine Hochformat-Seite mit der ausgefüllten Schnecke */
+  /* Fachkraft-Blatt: Schlagwort-Liste der offenen Kompetenzen */
+  .pf-chips-block{margin-top:14px}
+  .pf-bereich-chips{margin-bottom:11px}
+  .pf-bereich-chips h4{margin:0 0 6px; font-size:12px; font-weight:700}
+  .pf-chiprow{display:flex; flex-wrap:wrap; gap:6px}
+  .pf-chip{display:inline-flex; align-items:center; gap:4px; border:1.2px solid currentColor; border-radius:14px; padding:3px 10px; font-size:10px; background:#fff; white-space:nowrap}
+  .pf-chip b{font-weight:700; opacity:.65; font-size:9.5px}
+  .pf-alldone{padding:10px 4px; color:#666; font-size:12.5px; text-align:center}
+
+  /* print – Elternblatt: genau eine Hochformat-Seite; Fachkraft-Blatt: darf mehrseitig sein */
   @media print{
     *{-webkit-print-color-adjust:exact; print-color-adjust:exact}
     @page{size:A4 portrait; margin:10mm}
     header.app, .kidbar, .footer-note, .noprint, .toolbar, .layout, input[type="file"]{display:none !important}
     body{background:#fff}
-    #printHead{display:block !important; page-break-inside:avoid}
-    #printHead .ph-top{padding-bottom:6px; margin-bottom:4px}
-    #printHead .ph-top img{height:58px}
+    #printHead, #printFach{display:none !important}
+    body.printing-eltern #printHead{display:block !important; page-break-inside:avoid}
+    body.printing-fach #printFach{display:block !important}
+    #printHead .ph-top, #printFach .ph-top{padding-bottom:6px; margin-bottom:4px}
+    #printHead .ph-top img, #printFach .ph-top img{height:58px}
     #printHead .ph-h1{font-size:20px}
+    #printFach .ph-h1{font-size:16px}
+    .pf-bereich-chips{page-break-inside:avoid}
   }
 </style>
 </head>
-<body>
+<body class="printing-eltern">
 
 <header class="app">
   <div id="logoBox" title="Logo wählen (klick)">Logo<br>wählen</div>
@@ -175,7 +211,8 @@
   <div class="spacer"></div>
   <div class="toolbar noprint">
     <button id="btnOpen">Öffnen</button>
-    <button id="btnPrint">Drucken / PDF</button>
+    <button id="btnPrint">Elternblatt drucken</button>
+    <button id="btnPrintFach">Fachkraft-Blatt drucken</button>
     <button id="btnSave" class="primary">Kind speichern</button>
   </div>
 </header>
@@ -203,6 +240,40 @@
     <span>&#9679;&#9711; im Werden</span>
     <span>&#9679;&#9679; sicher vorhanden</span>
   </div>
+  <div class="ph-stats">
+    <div class="ph-stats-title">Noch zu fördern je Bereich</div>
+    <div class="ph-stats-grid" id="phStats"></div>
+  </div>
+</div>
+
+<div id="printFach">
+  <div class="ph-top">
+    <img id="pfLogo" alt="Logo">
+    <div class="ph-titles">
+      <div class="ph-h1">Entwicklungsschnecke – Fachkraft-Auswertung</div>
+      <div class="ph-sub">Beobachtungsbogen für Kinder von 3–6 Jahren · 169 Beobachtungspunkte</div>
+    </div>
+    <div class="ph-kid">
+      <div><span>Kind</span><b id="pfName">—</b></div>
+      <div><span>Geburtsdatum</span><b id="pfGeb">—</b></div>
+      <div><span>Beobachtung</span><b id="pfDatum">—</b></div>
+    </div>
+  </div>
+  <div id="printWheelFach"></div>
+  <div class="ph-legend">
+    <span><b>Pro Feld bis zu zwei Punkte:</b></span>
+    <span>&#9711;&#9711; zeigt sich noch nicht</span>
+    <span>&#9679;&#9711; im Werden</span>
+    <span>&#9679;&#9679; sicher vorhanden</span>
+  </div>
+  <div class="ph-stats">
+    <div class="ph-stats-title">Noch zu fördern je Bereich <span id="pfGesamt" class="pf-gesamt"></span></div>
+    <div class="ph-stats-grid" id="pfStats"></div>
+  </div>
+  <div class="pf-chips-block">
+    <div class="ph-stats-title">Noch nicht bepunktete Kompetenzen – Schlagwörter</div>
+    <div id="pfChips"></div>
+  </div>
 </div>
 
 <div class="kidbar noprint">
@@ -228,6 +299,15 @@
 <div class="layout">
   <main>
     <div id="bereiche"></div>
+
+    <details class="panel" id="offenePanel">
+      <summary style="cursor:pointer; list-style:none; display:flex; align-items:center; gap:10px">
+        <h2 style="margin:0">Noch nicht bepunktete Kompetenzen</h2>
+        <span class="hint" id="offeneGesamt" style="margin:0"></span>
+      </summary>
+      <p class="hint">Alle Punkte, die noch leer sind ("zeigt sich noch nicht") – gruppiert nach Bereich. Aktualisiert sich automatisch.</p>
+      <div id="offeneListe"></div>
+    </details>
 
     <div class="panel" id="notizen">
       <h2>Notizen zum Gespräch</h2>
@@ -517,6 +597,7 @@ function cycle(n){
   updateItem(n);
   updateProgress();
   updateWheel();
+  updateOffene();
 }
 function updateItem(n){
   const box = document.querySelector(`.box[data-n="${n}"]`);
@@ -539,6 +620,56 @@ function refreshAll(){
   ITEMS.forEach(it=> updateItem(it[0]));
   updateProgress();
   updateWheel();
+  updateOffene();
+}
+
+/* ---------- Förderübersicht: noch nicht bepunktete Kompetenzen ---------- */
+// Liefert je Bereich die Liste der Punkte mit Wert 0 ("zeigt sich noch nicht") plus Statistik
+function berechneOffene(){
+  return BEREICHE.map(b=>{
+    const items=[];
+    for(let n=b.from;n<=b.to;n++){ if(werte[n]===0) items.push(ITEMS[n-1]); }
+    const total=b.to-b.from+1;
+    const count=items.length;
+    const pct=Math.round(count/total*100);
+    return {bereich:b, items, total, count, pct};
+  });
+}
+
+function updateOffene(){
+  const daten = berechneOffene();
+  const gesamtOffen = daten.reduce((s,d)=>s+d.count,0);
+  const gesamtTotal = 169;
+  const gEl = document.getElementById("offeneGesamt");
+  if(gEl) gEl.textContent = `${gesamtOffen} von ${gesamtTotal} insgesamt noch offen`;
+
+  const wrap = document.getElementById("offeneListe");
+  if(!wrap) return;
+  wrap.innerHTML="";
+  if(gesamtOffen===0){
+    wrap.innerHTML = `<div class="oall-done">Alle 169 Kompetenzen sind mindestens „im Werden" bepunktet.</div>`;
+    return;
+  }
+  daten.forEach(d=>{
+    if(d.count===0) return;
+    const col = cssVar(d.bereich.varc);
+    const sec = document.createElement("div");
+    sec.className="obereich";
+    sec.innerHTML = `
+      <div class="ohead" style="--c:${col}; color:${col}">
+        <span>${d.bereich.name}</span>
+        <span class="ostat">${d.count} von ${d.total} offen · ${d.pct}%</span>
+      </div>
+      <div class="oitems"></div>`;
+    wrap.appendChild(sec);
+    const itemsWrap = sec.querySelector(".oitems");
+    d.items.forEach(it=>{
+      const row=document.createElement("div");
+      row.className="oitem";
+      row.innerHTML = `<span class="num">${it[0]}</span><span class="txt"><b>${it[1]}</b> <span>– ${it[2]}</span></span>`;
+      itemsWrap.appendChild(row);
+    });
+  });
 }
 
 /* ---------- Schnecke (SVG-Rad) ---------- */
@@ -898,24 +1029,101 @@ function buildPrintWheel(){
   return svg;
 }
 
-function syncPrint(){
+// Füllt eine Statistik-Grid-Fläche mit den sechs Bereichszeilen (für Eltern- und Fachkraft-Blatt gleich)
+function renderStatsInto(container){
+  if(!container) return;
+  container.innerHTML="";
+  berechneOffene().forEach(d=>{
+    const col = cssVar(d.bereich.varc);
+    const row = document.createElement("div");
+    row.className="ph-stat-row";
+    row.innerHTML = `<span class="nm" style="color:${col}">${d.bereich.name}</span>
+      <span class="bar"><i style="width:${d.pct}%;background:${col}"></i></span>
+      <span class="val">${d.count}/${d.total}</span>`;
+    container.appendChild(row);
+  });
+}
+
+// Füllt Kopf (Name/Datum/Logo) eines Druckblatts; prefix = "ph" (Eltern) oder "pf" (Fachkraft)
+function syncKopf(prefix){
   const nm = document.getElementById("kname").value.trim();
-  document.getElementById("phName").textContent = nm || "—";
-  document.getElementById("phGeb").textContent = fmtDate(document.getElementById("kgeb").value);
-  document.getElementById("phDatum").textContent = fmtDate(document.getElementById("kdatum").value);
-  const pl = document.getElementById("phLogo");
+  document.getElementById(prefix+"Name").textContent = nm || "—";
+  document.getElementById(prefix+"Geb").textContent = fmtDate(document.getElementById("kgeb").value);
+  document.getElementById(prefix+"Datum").textContent = fmtDate(document.getElementById("kdatum").value);
+  const pl = document.getElementById(prefix+"Logo");
   if(logoDataUrl){ pl.src = logoDataUrl; pl.style.display=""; } else { pl.style.display="none"; }
+}
+
+function syncPrint(){
+  syncKopf("ph");
   const holder = document.getElementById("printWheel");
   holder.innerHTML="";
   holder.appendChild(buildPrintWheel());
+  renderStatsInto(document.getElementById("phStats"));
 }
-window.addEventListener("beforeprint", syncPrint);
+window.addEventListener("beforeprint", ()=>{
+  // Falls per Ctrl+P/Cmd+P gedruckt wird, synct das gerade aktive Blatt
+  if(document.body.classList.contains("printing-fach")) syncPrintFach(); else syncPrint();
+});
+
+// Schlagwort-Chips der noch nicht bepunkteten Kompetenzen, gruppiert nach Bereich
+function renderSchlagwoerter(container){
+  if(!container) return;
+  container.innerHTML="";
+  const daten = berechneOffene();
+  const gesamtOffen = daten.reduce((s,d)=>s+d.count,0);
+  if(gesamtOffen===0){
+    container.innerHTML = `<div class="pf-alldone">Alle 169 Kompetenzen sind mindestens „im Werden" bepunktet.</div>`;
+    return;
+  }
+  daten.forEach(d=>{
+    if(d.count===0) return;
+    const col = cssVar(d.bereich.varc);
+    const block = document.createElement("div");
+    block.className="pf-bereich-chips";
+    block.innerHTML = `<h4 style="color:${col}">${d.bereich.name} – ${d.count} von ${d.total} offen</h4><div class="pf-chiprow"></div>`;
+    const row = block.querySelector(".pf-chiprow");
+    d.items.forEach(it=>{
+      const chip=document.createElement("span");
+      chip.className="pf-chip"; chip.style.color=col;
+      chip.innerHTML = `<b>${it[0]}</b>${it[1]}`;
+      row.appendChild(chip);
+    });
+    container.appendChild(block);
+  });
+}
+
+function syncPrintFach(){
+  syncKopf("pf");
+  const holder = document.getElementById("printWheelFach");
+  holder.innerHTML="";
+  holder.appendChild(buildPrintWheel());
+  renderStatsInto(document.getElementById("pfStats"));
+  const gesamtOffen = berechneOffene().reduce((s,d)=>s+d.count,0);
+  document.getElementById("pfGesamt").textContent = `(${gesamtOffen} von 169 insgesamt offen)`;
+  renderSchlagwoerter(document.getElementById("pfChips"));
+}
 
 /* ---------- Buttons ---------- */
 document.getElementById("btnSave").addEventListener("click", speichern);
 document.getElementById("btnOpen").addEventListener("click", ()=> document.getElementById("fileOpen").click());
 document.getElementById("fileOpen").addEventListener("change", e=>{ if(e.target.files[0]) oeffnen(e.target.files[0]); e.target.value=""; });
-document.getElementById("btnPrint").addEventListener("click", ()=> window.print());
+document.getElementById("btnPrint").addEventListener("click", ()=>{
+  document.body.classList.remove("printing-fach");
+  document.body.classList.add("printing-eltern");
+  syncPrint();
+  window.print();
+});
+document.getElementById("btnPrintFach").addEventListener("click", ()=>{
+  document.body.classList.remove("printing-eltern");
+  document.body.classList.add("printing-fach");
+  syncPrintFach();
+  window.print();
+});
+window.addEventListener("afterprint", ()=>{
+  document.body.classList.remove("printing-fach");
+  document.body.classList.add("printing-eltern");
+});
 document.getElementById("btnNeu").addEventListener("click", ()=>{
   if(confirm("Formular leeren? Nicht gespeicherte Eingaben gehen verloren.")) leeren();
 });
