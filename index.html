@@ -174,6 +174,18 @@
   .wheel-dot{cursor:pointer}
   .footer-note{color:var(--muted); font-size:12px; padding:0 20px 30px}
 
+  /* Entwicklungsvergleich + Notizen (App-Panel und Fachkraft-Blatt) */
+  .pf-vergleich-block{margin-top:14px; border-top:1px solid #ddd; padding-top:8px}
+  .pf-vgl-gruppe{margin-bottom:10px}
+  .pf-vgl-gruppe h4{margin:0 0 6px; font-size:12px; font-weight:700; color:#444}
+  .pf-vgl-leer{color:#666; font-size:12px; padding:4px 0}
+  .pf-vgl-rueck{color:#8a6d1a; font-size:10.5px; margin-top:6px}
+  .pf-chip.solid{color:#fff}
+  .pf-notizen-block{margin-top:14px; border-top:1px solid #ddd; padding-top:8px}
+  .pf-note{margin:0 0 9px}
+  .pf-note h5{margin:0 0 3px; font-size:11.5px; font-weight:700; color:#444}
+  .pf-note p{margin:0; font-size:11px; white-space:pre-wrap; line-height:1.35}
+
   /* Fachkraft-Blatt: Schlagwort-Liste der offenen Kompetenzen */
   .pf-chips-block{margin-top:14px}
   .pf-bereich-chips{margin-bottom:11px}
@@ -197,6 +209,7 @@
     #printHead .ph-h1{font-size:20px}
     #printFach .ph-h1{font-size:16px}
     .pf-bereich-chips{page-break-inside:avoid}
+    .pf-vgl-gruppe, .pf-note{page-break-inside:avoid}
   }
 </style>
 </head>
@@ -270,9 +283,17 @@
     <div class="ph-stats-title">Noch zu fördern je Bereich <span id="pfGesamt" class="pf-gesamt"></span></div>
     <div class="ph-stats-grid" id="pfStats"></div>
   </div>
+  <div class="pf-vergleich-block" id="pfVergleichBlock">
+    <div class="ph-stats-title">Entwicklung seit letzter Beobachtung <span id="pfVglDatum" class="pf-gesamt"></span></div>
+    <div id="pfVergleich"></div>
+  </div>
   <div class="pf-chips-block">
     <div class="ph-stats-title">Noch nicht bepunktete Kompetenzen – Schlagwörter</div>
     <div id="pfChips"></div>
+  </div>
+  <div class="pf-notizen-block" id="pfNotizenBlock">
+    <div class="ph-stats-title">Notizen zum Gespräch</div>
+    <div id="pfNotizen"></div>
   </div>
 </div>
 
@@ -307,6 +328,15 @@
       </summary>
       <p class="hint">Alle Punkte, die noch leer sind ("zeigt sich noch nicht") – gruppiert nach Bereich. Aktualisiert sich automatisch.</p>
       <div id="offeneListe"></div>
+    </details>
+
+    <details class="panel" id="vergleichPanel" style="display:none">
+      <summary style="cursor:pointer; list-style:none; display:flex; align-items:center; gap:10px">
+        <h2 style="margin:0">Entwicklung seit letzter Beobachtung</h2>
+        <span class="hint" id="vglGesamt" style="margin:0"></span>
+      </summary>
+      <p class="hint">Vergleich mit der jüngsten früheren Erhebung aus der geladenen Datei.</p>
+      <div id="vergleichListe"></div>
     </details>
 
     <div class="panel" id="notizen">
@@ -598,6 +628,7 @@ function cycle(n){
   updateProgress();
   updateWheel();
   updateOffene();
+  updateVergleich();
 }
 function updateItem(n){
   const box = document.querySelector(`.box[data-n="${n}"]`);
@@ -621,6 +652,7 @@ function refreshAll(){
   updateProgress();
   updateWheel();
   updateOffene();
+  updateVergleich();
 }
 
 /* ---------- Förderübersicht: noch nicht bepunktete Kompetenzen ---------- */
@@ -1093,6 +1125,102 @@ function renderSchlagwoerter(container){
   });
 }
 
+/* ---------- Entwicklungsvergleich zur letzten Beobachtung ---------- */
+function bereichFuer(n){ return BEREICHE.find(b=> n>=b.from && n<=b.to); }
+
+// Jüngste frühere Erhebung (Datum vor dem aktuellen Beobachtungsdatum) als Vergleichsbasis
+function vergleichsBasis(){
+  const cur = document.getElementById("kdatum").value || heute();
+  return verlauf.find(e=> (e.datum||"") < cur) || null;
+}
+
+function berechneVergleich(){
+  const basis = vergleichsBasis();
+  if(!basis) return null;
+  const neuSicher=[], neuWerden=[], rueck=[];
+  ITEMS.forEach(it=>{
+    const n=it[0];
+    const prev=(basis.werte && basis.werte[n])||0;
+    const now=werte[n];
+    if(now>prev){ (now===2? neuSicher:neuWerden).push(it); }
+    else if(now<prev){ rueck.push(n); }
+  });
+  return {basis, neuSicher, neuWerden, rueck};
+}
+
+// Baut die Vergleichsdarstellung (Chips nach Kategorie) in einen Container
+function fuelleVergleich(wrap, v){
+  wrap.innerHTML="";
+  if(v.neuSicher.length===0 && v.neuWerden.length===0 && v.rueck.length===0){
+    wrap.innerHTML = `<div class="pf-vgl-leer">Keine Veränderungen gegenüber der Beobachtung vom ${fmtDate(v.basis.datum)}.</div>`;
+    return;
+  }
+  const gruppe = (titel, items, solid)=>{
+    if(!items.length) return;
+    const g=document.createElement("div");
+    g.className="pf-vgl-gruppe";
+    g.innerHTML = `<h4>${titel} (${items.length})</h4><div class="pf-chiprow"></div>`;
+    const row=g.querySelector(".pf-chiprow");
+    items.forEach(it=>{
+      const col = cssVar(bereichFuer(it[0]).varc);
+      const chip=document.createElement("span");
+      chip.className="pf-chip"+(solid?" solid":"");
+      if(solid){ chip.style.background=col; chip.style.borderColor=col; }
+      else{ chip.style.color=col; }
+      chip.innerHTML = `<b>${it[0]}</b>${it[1]}`;
+      row.appendChild(chip);
+    });
+    wrap.appendChild(g);
+  };
+  gruppe("Neu sicher vorhanden", v.neuSicher, true);
+  gruppe("Neu im Werden", v.neuWerden, false);
+  if(v.rueck.length){
+    const p=document.createElement("div");
+    p.className="pf-vgl-rueck";
+    p.textContent = `Niedriger bewertet als zuvor: Nr. ${v.rueck.join(", ")} – ggf. im Gespräch klären.`;
+    wrap.appendChild(p);
+  }
+}
+
+function updateVergleich(){
+  const panel=document.getElementById("vergleichPanel");
+  if(!panel) return;
+  const v=berechneVergleich();
+  if(!v){ panel.style.display="none"; return; }
+  panel.style.display="";
+  const neu = v.neuSicher.length + v.neuWerden.length;
+  document.getElementById("vglGesamt").textContent =
+    `Basis: ${fmtDate(v.basis.datum)} · ${neu} neu erreicht`;
+  fuelleVergleich(document.getElementById("vergleichListe"), v);
+}
+document.getElementById("kdatum").addEventListener("change", updateVergleich);
+
+/* ---------- Notizen auf dem Fachkraft-Blatt ---------- */
+const NOTIZ_LABELS = {
+  gut:"Das kann Ihr Kind besonders gut",
+  arbeiten:"Daran arbeiten wir gerade",
+  zuhause:"Was Sie zu Hause unterstützen können"
+};
+function renderNotizenPrint(){
+  const block=document.getElementById("pfNotizenBlock");
+  const wrap=document.getElementById("pfNotizen");
+  if(!block || !wrap) return;
+  const o=getNotizen();
+  wrap.innerHTML="";
+  let any=false;
+  Object.keys(NOTIZ_LABELS).forEach(k=>{
+    const v=(o[k]||"").trim();
+    if(!v) return;
+    any=true;
+    const div=document.createElement("div");
+    div.className="pf-note";
+    div.innerHTML=`<h5>${NOTIZ_LABELS[k]}</h5><p></p>`;
+    div.querySelector("p").textContent=v;
+    wrap.appendChild(div);
+  });
+  block.style.display = any? "" : "none";
+}
+
 function syncPrintFach(){
   syncKopf("pf");
   const holder = document.getElementById("printWheelFach");
@@ -1101,7 +1229,17 @@ function syncPrintFach(){
   renderStatsInto(document.getElementById("pfStats"));
   const gesamtOffen = berechneOffene().reduce((s,d)=>s+d.count,0);
   document.getElementById("pfGesamt").textContent = `(${gesamtOffen} von 169 insgesamt offen)`;
+  const vglBlock=document.getElementById("pfVergleichBlock");
+  const v=berechneVergleich();
+  if(v){
+    vglBlock.style.display="";
+    document.getElementById("pfVglDatum").textContent = `(Basis: ${fmtDate(v.basis.datum)})`;
+    fuelleVergleich(document.getElementById("pfVergleich"), v);
+  } else {
+    vglBlock.style.display="none";
+  }
   renderSchlagwoerter(document.getElementById("pfChips"));
+  renderNotizenPrint();
 }
 
 /* ---------- Buttons ---------- */
