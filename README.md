@@ -1,6 +1,13 @@
 # Entwicklungsschnecke
 
-Ein Beobachtungsbogen für Kinder von 3–6 Jahren als kleine Web-App. Ein Kind wird angelegt, die 169 Beobachtungspunkte in sechs Bildungsbereichen bewertet (leer / halb / voll), dazu Notizen und eine Schnecken-Übersicht. Alles läuft im Browser, es werden keine Daten ins Netz übertragen.
+Ein Beobachtungsbogen für Kinder von 1–6 Jahren als kleine Web-App, mit zwei umschaltbaren Katalogen:
+
+- **0–3 Jahre** (Reiter „0–3 Jahre“): Kernkatalog für 1;0 – 2;11 Jahre, 123 Beobachtungspunkte, gestaffelt nach vier Altersbändern. Punkte aus noch nicht erreichten Bändern werden grau angezeigt und zählen nicht in der Statistik mit. Dazu zwei Zusatzmodule: eine einmalige Eingewöhnungs-Dokumentation und eine Einschätzung von Wohlbefinden und Engagiertheit pro Beobachtung.
+- **3 Jahre – Schuleintritt** (Reiter „3 Jahre – Schuleintritt“): der ursprüngliche Katalog mit 169 Beobachtungspunkten, unverändert.
+
+Beide Kataloge nutzen dieselben sechs Bildungsbereiche (Spielen, Sprechen/Hören/Sehen, Denken, Bewegung, Lebenspraxis, Soziales Miteinander) und dasselbe Dateiformat, sodass die Akte eines Kindes beim Übergang von der Krippe in den Kindergarten weiterläuft. Ein Kind wird angelegt, die Beobachtungspunkte werden bewertet (leer / halb / voll), dazu Notizen und eine Schnecken-Übersicht. Alles läuft im Browser, es werden keine Daten ins Netz übertragen.
+
+Der Moduswechsel schlägt sich aus dem Geburtsdatum vor, lässt sich aber jederzeit von Hand umstellen. Enthält der Bogen bereits Bewertungen, fragt die App vor dem Wechsel nach, damit nichts versehentlich verloren geht.
 
 ## Online stellen mit GitHub Pages
 

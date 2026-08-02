@@ -146,6 +146,34 @@
   .hint{font-size:12px; color:var(--muted); margin-top:6px}
   svg#wheel{width:100%; height:auto; display:block}
 
+  /* Moduswahl (0–3 Jahre / 3 Jahre – Schuleintritt) */
+  .modetabs{display:flex; gap:6px; margin-top:8px}
+  .modetab{font-size:12px; padding:5px 11px; border:1px solid var(--line); border-radius:20px; background:#fff; cursor:pointer; color:var(--muted)}
+  .modetab.active{background:var(--ink); color:#fff; border-color:var(--ink); font-weight:600}
+
+  /* Altersbänder in der Bereichsliste */
+  .banduberschrift{font-weight:700; font-size:11.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.03em; padding:10px 8px 4px; border-top:1px dashed var(--line); margin-top:4px}
+  .banduberschrift:first-child{border-top:none; margin-top:0}
+  .item-notyet{opacity:.5}
+  .item-notyet .box{cursor:default}
+  .item-notyet .statelabel{font-style:italic}
+  .anker-marker{opacity:.75; font-size:11px; margin-left:2px}
+
+  /* Eingewöhnung */
+  .eg-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:10px 14px; margin-bottom:12px}
+
+  /* Wohlbefinden & Engagiertheit */
+  .skala-block{margin-bottom:14px}
+  .skala-block label{display:block; font-weight:600; font-size:13px; margin-bottom:6px}
+  .skala{display:flex; gap:6px}
+  .skala button{width:36px; height:36px; border-radius:8px; border:1px solid var(--line); background:#fff; font-weight:600; font-family:inherit; cursor:pointer}
+  .skala button.active{background:var(--ink); color:#fff; border-color:var(--ink)}
+  .skala-hint{font-size:11px; color:var(--muted); margin-top:4px}
+
+  /* Fachkraft-Blatt: Anker-Hinweis und Disclaimer */
+  .pf-anker-hinweis{font-size:10.5px; color:#8a6d1a; margin-bottom:6px}
+  .pf-disclaimer{margin-top:12px; padding-top:6px; border-top:1px solid #ddd; font-size:9.5px; color:#777; text-align:center}
+
   /* Druckkopf – nur beim Drucken sichtbar (Elternblatt und Fachkraft-Blatt teilen sich die Stile) */
   #printHead, #printFach{display:none}
   #printHead .ph-top, #printFach .ph-top{display:flex; align-items:center; gap:16px; border-bottom:2px solid var(--ink); padding-bottom:10px}
@@ -219,7 +247,11 @@
   <div id="logoBox" title="Logo wählen (klick)">Logo<br>wählen</div>
   <div class="titlewrap">
     <h1>Entwicklungsschnecke</h1>
-    <p>Beobachtungsbogen für Kinder von 3–6 Jahren · 169 Beobachtungspunkte</p>
+    <p id="modeSub">Beobachtungsbogen für Kinder von 3–6 Jahren · 169 Beobachtungspunkte</p>
+    <div class="modetabs noprint" role="tablist" aria-label="Altersbereich wählen">
+      <button type="button" class="modetab" data-mode="u3" role="tab" aria-selected="false">0–3 Jahre</button>
+      <button type="button" class="modetab active" data-mode="ue3" role="tab" aria-selected="true">3 Jahre – Schuleintritt</button>
+    </div>
   </div>
   <div class="spacer"></div>
   <div class="toolbar noprint">
@@ -287,14 +319,24 @@
     <div class="ph-stats-title">Entwicklung seit letzter Beobachtung <span id="pfVglDatum" class="pf-gesamt"></span></div>
     <div id="pfVergleich"></div>
   </div>
+  <div class="pf-vergleich-block" id="pfWohlBlock" style="display:none">
+    <div class="ph-stats-title">Wohlbefinden &amp; Engagiertheit</div>
+    <div id="pfWohlInhalt"></div>
+  </div>
   <div class="pf-chips-block">
     <div class="ph-stats-title">Noch nicht bepunktete Kompetenzen – Schlagwörter</div>
+    <div class="pf-anker-hinweis" id="pfAnkerHinweis" style="display:none"></div>
     <div id="pfChips"></div>
+  </div>
+  <div class="pf-notizen-block" id="pfEingewoehnungBlock" style="display:none">
+    <div class="ph-stats-title">Eingewöhnung</div>
+    <div id="pfEingewoehnung"></div>
   </div>
   <div class="pf-notizen-block" id="pfNotizenBlock">
     <div class="ph-stats-title">Notizen zum Gespräch</div>
     <div id="pfNotizen"></div>
   </div>
+  <div class="pf-disclaimer">Dieser Bogen ist ein Beobachtungsinstrument für den pädagogischen Alltag. Er ist kein Test, keine Diagnostik und kein Ersatz für die kinderärztlichen Vorsorgeuntersuchungen.</div>
 </div>
 
 <div class="kidbar noprint">
@@ -319,16 +361,72 @@
 
 <div class="layout">
   <main>
+    <div id="u3Hinweis" class="hint" style="display:none; margin:-6px 0 14px"></div>
     <div id="bereiche"></div>
 
     <details class="panel" id="offenePanel">
       <summary style="cursor:pointer; list-style:none; display:flex; align-items:center; gap:10px">
-        <h2 style="margin:0">Noch nicht bepunktete Kompetenzen</h2>
+        <h2 style="margin:0" id="offeneTitel">Noch nicht bepunktete Kompetenzen</h2>
         <span class="hint" id="offeneGesamt" style="margin:0"></span>
       </summary>
       <p class="hint">Alle Punkte, die noch leer sind ("zeigt sich noch nicht") – gruppiert nach Bereich. Aktualisiert sich automatisch.</p>
       <div id="offeneListe"></div>
     </details>
+
+    <details class="panel" id="eingewoehnungPanel" style="display:none">
+      <summary style="cursor:pointer; list-style:none; display:flex; align-items:center; gap:10px">
+        <h2 style="margin:0">Eingewöhnung</h2>
+        <span class="hint" style="margin:0">einmalig · kein Bewertungsraster · nur im Fachkraft-Blatt</span>
+      </summary>
+      <div class="eg-grid">
+        <div class="field"><label for="egBeginn">Beginn</label><input type="date" id="egBeginn"></div>
+        <div class="field"><label for="egEnde">Ende</label><input type="date" id="egEnde"></div>
+        <div class="field"><label for="egBezugsfachkraft">Bezugsfachkraft</label><input type="text" id="egBezugsfachkraft"></div>
+        <div class="field"><label for="egBegleitperson">Begleitende Person</label><input type="text" id="egBegleitperson"></div>
+        <div class="field"><label for="egTrennDatum">Erster Trennungsversuch – Datum</label><input type="date" id="egTrennDatum"></div>
+        <div class="field"><label for="egTrennDauer">Erster Trennungsversuch – Dauer (Min.)</label><input type="number" min="0" id="egTrennDauer"></div>
+      </div>
+      <div class="noteblock">
+        <label>Wie das Kind Trost angenommen hat</label>
+        <textarea id="egTrost"></textarea>
+      </div>
+      <div class="eg-grid">
+        <div class="field"><label for="egSchlafenAb">Schlafen möglich ab</label><input type="date" id="egSchlafenAb"></div>
+        <div class="field"><label for="egEssenAb">Essen möglich ab</label><input type="date" id="egEssenAb"></div>
+        <div class="field"><label for="egWickelnAb">Wickeln/Toilette möglich ab</label><input type="date" id="egWickelnAb"></div>
+      </div>
+      <div class="noteblock">
+        <label>Besonderheiten und Absprachen</label>
+        <textarea id="egBesonderheiten"></textarea>
+      </div>
+    </details>
+
+    <div class="panel" id="wohlPanel" style="display:none">
+      <h2>Wohlbefinden &amp; Engagiertheit</h2>
+      <p class="hint">Einmalige Einschätzung für diese Beobachtung – sagt oft mehr über die Passung von Kind und Gruppe als ein einzelner Kompetenzpunkt.</p>
+      <div class="skala-block">
+        <label>Wohlbefinden</label>
+        <div class="skala" data-skala="wohlbefinden">
+          <button type="button" data-wert="1">1</button>
+          <button type="button" data-wert="2">2</button>
+          <button type="button" data-wert="3">3</button>
+          <button type="button" data-wert="4">4</button>
+          <button type="button" data-wert="5">5</button>
+        </div>
+        <div class="skala-hint">1 = wirkt sehr unwohl · 5 = wirkt rundum wohl</div>
+      </div>
+      <div class="skala-block">
+        <label>Engagiertheit</label>
+        <div class="skala" data-skala="engagiertheit">
+          <button type="button" data-wert="1">1</button>
+          <button type="button" data-wert="2">2</button>
+          <button type="button" data-wert="3">3</button>
+          <button type="button" data-wert="4">4</button>
+          <button type="button" data-wert="5">5</button>
+        </div>
+        <div class="skala-hint">1 = kaum beteiligt · 5 = ganz vertieft</div>
+      </div>
+    </div>
 
     <details class="panel" id="vergleichPanel" style="display:none">
       <summary style="cursor:pointer; list-style:none; display:flex; align-items:center; gap:10px">
@@ -371,6 +469,7 @@
       <div class="row"><span class="mini"><i class="l"></i><i></i></span> kein Punkt – zeigt sich noch nicht</div>
       <div class="row"><span class="mini one"><i class="l"></i><i></i></span> halb – im Werden, das Kind übt gerade</div>
       <div class="row"><span class="mini two"><i class="l"></i><i></i></span> voll – sicher vorhanden</div>
+      <div class="row" id="legendNotYet" style="display:none"><span class="mini" style="opacity:.4"><i class="l"></i><i></i></span> grau – dafür ist Ihr Kind noch nicht alt genug</div>
       <div class="row" style="margin-top:8px">Klick auf ein Kästchen schaltet weiter: leer → halb → voll → leer.</div>
     </div>
     <div class="panel">
@@ -386,8 +485,8 @@
 <script>
 "use strict";
 
-/* ---------- 169 Beobachtungspunkte ---------- */
-const BEREICHE = [
+/* ---------- Katalog 3–6 Jahre: 169 Beobachtungspunkte (unverändert) ---------- */
+const BEREICHE_UE3 = [
   {id:"spielen",      name:"Spielen",                               varc:"--spielen",      from:1,   to:38},
   {id:"sprechen",     name:"Sprechen, Hören, Sehen",                varc:"--sprechen",     from:39,  to:61},
   {id:"denken",       name:"Denken",                                varc:"--denken",       from:62,  to:90},
@@ -396,7 +495,7 @@ const BEREICHE = [
   {id:"sozial",       name:"Soziales Miteinander / Emotionalität",  varc:"--sozial",       from:144, to:169},
 ];
 
-const ITEMS = [
+const ITEMS_UE3 = [
   [1,"Bezieht Spielzeug ein","spielt mit Bällen, Bausteinen oder Puppen passend zum Alter"],
   [2,"Probiert vieles aus","ist neugierig auf neues Material und wendet sich Neuem zu"],
   [3,"Ordnet nach Formen/Größen","sortiert Bausteine nach Form und Größe"],
@@ -568,14 +667,244 @@ const ITEMS = [
   [169,"Pos. Selbstwertgefühl","ist von sich überzeugt und empathisch"],
 ];
 
+/* ---------- Katalog 0–3 Jahre: Kernkatalog 1;0–2;11 Jahre, 123 Beobachtungspunkte ---------- */
+/* Aufnahme faktisch ab 1;0 Jahren. Die Bänder 0;6–0;11 sind bewusst noch nicht eingebaut     */
+/* (siehe Konzeptdokument, Abschnitt 12) und können bei Bedarf ergänzt werden.                */
+const BAENDER_U3 = [
+  {id:"b3", kurz:"1;0–1;5",  label:"1;0 – 1;5 Jahre",  vonM:12, bisM:17},
+  {id:"b4", kurz:"1;6–1;11", label:"1;6 – 1;11 Jahre", vonM:18, bisM:23},
+  {id:"b5", kurz:"2;0–2;5",  label:"2;0 – 2;5 Jahre",  vonM:24, bisM:29},
+  {id:"b6", kurz:"2;6–2;11", label:"2;6 – 2;11 Jahre", vonM:30, bisM:35},
+];
+
+const BEREICHE_U3 = [
+  {id:"spielen",      name:"Spielen",                               varc:"--spielen",      from:1,   to:20},
+  {id:"sprechen",     name:"Sprechen, Hören, Sehen",                varc:"--sprechen",     from:21,  to:42},
+  {id:"denken",       name:"Denken",                                varc:"--denken",       from:43,  to:61},
+  {id:"bewegung",     name:"Bewegung",                              varc:"--bewegung",     from:62,  to:84},
+  {id:"lebenspraxis", name:"Lebenspraxis",                          varc:"--lebenspraxis", from:85,  to:104},
+  {id:"sozial",       name:"Soziales Miteinander / Emotionalität",  varc:"--sozial",       from:105, to:123},
+];
+
+// [nr, titel, erklaerung, band, anker]  – anker=true: Beobachtungsanker, siehe istAnker()
+const ITEMS_U3 = [
+  // Spielen (1–20)
+  [1,"Räumt ein und aus","füllt Behälter und leert sie wieder","b3",false],
+  [2,"Stapelt zwei bis drei Klötze","baut erste Türmchen","b3",false],
+  [3,"Schiebt und zieht","nutzt Fahrzeuge, Nachziehtiere, Wagen","b3",false],
+  [4,"Nutzt Dinge zweckgemäß","rührt mit dem Löffel, kämmt mit der Bürste","b3",false],
+  [5,"Erkundet Wasser und Sand","geht offen mit fließenden Materialien um","b3",false],
+  [6,"Erstes Als-ob-Spiel","füttert die Puppe, telefoniert mit dem Klotz","b4",false],
+  [7,"Ahmt andere Kinder nach","übernimmt gesehene Spielhandlungen","b4",false],
+  [8,"Spielt nebeneinander","nutzt gleiches Material neben einem anderen Kind","b4",false],
+  [9,"Hat Lieblingsbeschäftigungen","kehrt aus eigenem Antrieb dorthin zurück","b4",false],
+  [10,"Reiht und sortiert","legt Dinge in Reihen oder Gruppen","b4",false],
+  [11,"Spielt Alltag nach","kocht, kauft ein, legt schlafen","b5",false],
+  [12,"Baut Türme aus fünf bis sechs Teilen","konstruiert stabiler","b5",false],
+  [13,"Nutzt Ersatzgegenstände","der Klotz wird zum Auto, das Tuch zur Decke","b5",false],
+  [14,"Bleibt fünf bis zehn Minuten dabei","hält eine selbstgewählte Tätigkeit","b5",false],
+  [15,"Steckt und puzzelt","löst Formenspiele mit zwei bis vier Teilen","b5",false],
+  [16,"Spielt kurz mit einem Kind zusammen","gemeinsames Thema für einige Minuten","b6",false],
+  [17,"Baut nach eigener Idee","konstruiert und benennt das Ergebnis","b6",false],
+  [18,"Hält eine einfache Spielregel","in einem begleiteten Spiel, kurze Zeit","b6",false],
+  [19,"Wählt Material selbst aus","entscheidet, womit es spielen möchte","b6",false],
+  [20,"Räumt mit Begleitung weg","beteiligt sich am Aufräumen","b6",false],
+
+  // Sprechen, Hören, Sehen (21–42) – bitte über alle Sprachen des Kindes zusammen beobachten
+  [21,"Zeigt mit dem Finger","und schaut dabei die Bezugsperson an","b3",true],
+  [22,"Spricht erste Wörter","mit gleichbleibender Bedeutung","b3",true],
+  [23,"Versteht kurze Aufforderungen","„Gib mir den Ball“","b3",false],
+  [24,"Zeigt auf Benanntes","findet Körperteile oder Bilder auf Nachfrage","b3",false],
+  [25,"Hört Büchern zu","bleibt bei kurzen Bilderbuchbetrachtungen dabei","b3",false],
+  [26,"Lernt schnell neue Wörter","der Wortschatz wächst spürbar von Woche zu Woche","b4",false],
+  [27,"Benennt Vertrautes","Personen, Tiere, Alltagsdinge","b4",false],
+  [28,"Zeigt im Bilderbuch","findet Genanntes zuverlässig","b4",false],
+  [29,"Bildet Zweiwortsätze","„Mama da“, „mehr Milch“","b4",true],
+  [30,"Versteht zweiteilige Aufträge","„Hol die Schuhe und komm her“","b4",false],
+  [31,"Nutzt Sprache statt Greifen","sagt, statt nur zu ziehen","b4",false],
+  [32,"Fragt nach Namen","„Was ist das?“","b5",false],
+  [33,"Spricht von sich","mit dem eigenen Namen oder „ich“","b5",false],
+  [34,"Bildet Drei- und Vierwortsätze","verbindet mehrere Wörter","b5",false],
+  [35,"Nutzt Tunwörter","benennt Handlungen, nicht nur Dinge","b5",false],
+  [36,"Ist für Vertraute verständlich","Bezugspersonen verstehen das meiste","b5",false],
+  [37,"Erzählt vom Erlebten","berichtet in einfachen Sätzen, was war","b6",false],
+  [38,"Stellt Fragen","wo, was, warum","b6",false],
+  [39,"Führt Aufträge in zwei Schritten aus","„Räum das weg und wasch die Hände“","b6",false],
+  [40,"Singt und reimt mit","beteiligt sich an Liedern und Versen","b6",false],
+  [41,"Sagt, was es will und nicht will","drückt Wunsch und Ablehnung sprachlich aus","b6",false],
+  [42,"Ist auch für Fremde verständlich","auswärtige Personen verstehen das meiste","b6",true],
+
+  // Denken (43–61)
+  [43,"Nutzt ein Hilfsmittel","holt den Hocker, zieht die Decke heran","b3",false],
+  [44,"Ordnet zu","legt Dinge dorthin, wo sie hingehören","b3",false],
+  [45,"Ahmt zeitversetzt nach","zeigt später, was es vorher gesehen hat","b3",false],
+  [46,"Kennt Abläufe","weiß, was nach dem Händewaschen kommt","b3",false],
+  [47,"Sortiert nach einem Merkmal","nach Farbe oder nach Größe","b4",false],
+  [48,"Steckt Formen ein","findet die passende Öffnung","b4",false],
+  [49,"Erkennt sich selbst","im Spiegel und auf Fotos","b4",false],
+  [50,"Sucht ausdauernd","bleibt bei der Suche nach etwas Verschwundenem","b4",false],
+  [51,"Erforscht Geräte","probiert Schalter, Deckel, Klappen aus","b4",false],
+  [52,"Unterscheidet eins und viele","versteht Mengenunterschiede","b5",false],
+  [53,"Findet Paare","ordnet Gleiches einander zu","b5",false],
+  [54,"Kennt Gegensätze","groß und klein, nass und trocken","b5",false],
+  [55,"Probiert andere Wege","versucht es anders, wenn es nicht klappt","b5",false],
+  [56,"Erinnert sich an gestern","erzählt oder zeigt Vergangenes","b5",false],
+  [57,"Erfasst kleine Mengen","bis drei, ohne zu zählen","b6",false],
+  [58,"Benennt erste Farben","mindestens zwei sicher","b6",false],
+  [59,"Ordnet Oberbegriffen zu","Tiere, Essen, Fahrzeuge","b6",false],
+  [60,"Versteht Zeitwörter im Alltag","jetzt, gleich, später","b6",false],
+  [61,"Bleibt an einer Aufgabe","bis sie gelöst ist","b6",false],
+
+  // Bewegung (62–84)
+  [62,"Geht an Möbeln entlang","hält sich seitlich fest","b3",false],
+  [63,"Macht freie Schritte","läuft ohne Halt","b3",true],
+  [64,"Setzt sich selbst hin","kommt aus dem Stand kontrolliert zum Sitzen","b3",false],
+  [65,"Stapelt zwei Klötze","setzt einen auf den anderen","b3",false],
+  [66,"Krabbelt Stufen hoch","bewältigt Treppen im Vierfüßler","b3",false],
+  [67,"Geht sicher","läuft frei, auch auf unebenem Boden","b4",true],
+  [68,"Hebt im Gehen auf","bückt sich und richtet sich wieder auf","b4",false],
+  [69,"Schiebt und trägt","bewegt Gegenstände im Gehen","b4",false],
+  [70,"Steigt Treppen mit Halt","Nachstellschritt am Geländer","b4",false],
+  [71,"Kritzelt aus der Schulter","malt mit großer Armbewegung","b4",false],
+  [72,"Blättert Seiten","auch mehrere auf einmal","b4",false],
+  [73,"Rennt","läuft schnell, ohne oft zu stürzen","b5",false],
+  [74,"Klettert auf und ab","nutzt niedrige Geräte selbstständig","b5",false],
+  [75,"Schießt einen Ball","tritt im Stand gegen den Ball","b5",false],
+  [76,"Wirft mit beiden Händen","befördert den Ball nach vorn","b5",false],
+  [77,"Fädelt große Perlen","führt Schnur und Perle zusammen","b5",false],
+  [78,"Malt Striche","hält den Stift im Faustgriff","b5",false],
+  [79,"Springt beidbeinig ab","hebt mit beiden Füßen vom Boden ab","b6",false],
+  [80,"Steigt im Wechselschritt","Treppe mit Festhalten, Bein für Bein","b6",false],
+  [81,"Fährt ein Rutschfahrzeug","stößt sich ab und lenkt","b6",false],
+  [82,"Balanciert kurz","geht auf einer Linie oder einem niedrigen Rand","b6",false],
+  [83,"Öffnet Verschlüsse","Deckel, Klett, Druckknöpfe","b6",false],
+  [84,"Malt Rundformen","erste geschlossene Kritzelkreise","b6",false],
+
+  // Lebenspraxis (85–104) – Sauberwerden ist ein Reifungsprozess, kein Trainingsergebnis
+  [85,"Isst mit dem Löffel","auch wenn dabei viel danebengeht","b3",false],
+  [86,"Trinkt aus dem offenen Becher","selbstständig, mit wenig Verschütten","b3",false],
+  [87,"Zieht Einfaches aus","Mütze, Socken, offene Jacke","b3",false],
+  [88,"Holt auf Bitte etwas","bringt die Schuhe, das Tuch","b3",false],
+  [89,"Wäscht Hände mit Hilfe","macht die Bewegung mit","b3",false],
+  [90,"Isst weitgehend allein","nutzt den Löffel zuverlässig","b4",false],
+  [91,"Zieht Kleidungsstücke aus","bekommt Hose oder Pulli allein herunter","b4",false],
+  [92,"Räumt begleitet weg","bringt Dinge an ihren Platz","b4",false],
+  [93,"Zeigt Interesse an Toilette und Töpfchen","schaut zu, will dabei sein","b4",false],
+  [94,"Wäscht und trocknet Hände","mit wenig Unterstützung","b4",false],
+  [95,"Meldet sich","sagt vor oder direkt nach dem Ausscheiden Bescheid","b5",false],
+  [96,"Zieht mit Hilfe an","Hose, Schuhe, mit Unterstützung","b5",false],
+  [97,"Hilft beim Tischdecken","bringt Becher und Teller","b5",false],
+  [98,"Nutzt Löffel und Gabel","wählt das passende Besteck","b5",false],
+  [99,"Schenkt sich ein","mit kleiner Kanne, mit Begleitung","b5",false],
+  [100,"Geht begleitet zur Toilette","meldet sich zunehmend zuverlässig","b6",false],
+  [101,"Zieht sich mit wenig Hilfe an","braucht nur noch bei Verschlüssen Unterstützung","b6",false],
+  [102,"Wäscht die Hände allein","ohne Anleitung, im richtigen Moment","b6",false],
+  [103,"Räumt den eigenen Platz ab","bringt Teller und Becher weg","b6",false],
+  [104,"Erkennt seine Sachen","Tasche, Schuhe, Bild am Haken","b6",false],
+
+  // Soziales Miteinander / Emotionalität (105–123)
+  [105,"Hat eine Bezugsperson in der Gruppe","sucht sie von sich aus auf","b3",false],
+  [106,"Interessiert sich für andere Kinder","schaut hin, geht hin, berührt","b3",false],
+  [107,"Zeigt Gefühle deutlich","Freude, Ärger, Trauer sind erkennbar","b3",false],
+  [108,"Zeigt her und teilt mit","bringt Dinge, um sie zu zeigen","b3",true],
+  [109,"Sagt „nein“","probiert den eigenen Willen aus","b4",false],
+  [110,"Kommt nach dem Abschied an","lässt sich von der Fachkraft beruhigen","b4",false],
+  [111,"Reagiert auf Kummer anderer","schaut hin, holt Hilfe, bleibt stehen","b4",false],
+  [112,"Freut sich am eigenen Können","zeigt Gelungenes vor","b4",false],
+  [113,"Benennt sich selbst","erkennt sich auf Fotos und sagt den eigenen Namen","b4",false],
+  [114,"Wartet kurz mit Begleitung","hält eine kleine Wartezeit aus","b5",false],
+  [115,"Geht auf ein Kind zu","nimmt von sich aus Kontakt auf","b5",false],
+  [116,"Will selber machen","besteht auf eigenständiger Ausführung","b5",false],
+  [117,"Lässt sich bei starken Gefühlen begleiten","nimmt Beruhigung an","b5",false],
+  [118,"Kennt Gruppenrituale","findet sich in wiederkehrenden Abläufen zurecht","b5",false],
+  [119,"Spielt kurz mit einem Kind","gemeinsames Tun über einige Minuten","b6",false],
+  [120,"Tröstet und hilft","wendet sich anderen Kindern zu","b6",false],
+  [121,"Benennt eigene Gefühle","sagt, dass es traurig oder wütend ist","b6",false],
+  [122,"Wartet, bis es dran ist","mit Unterstützung","b6",false],
+  [123,"Bewältigt Übergänge","kommt mit Ritualen durch Wechsel im Tagesablauf","b6",false],
+];
+
+/* ---------- Moduswahl: zwei Kataloge, ein Werkzeug ---------- */
+const MODI = {
+  ue3: {
+    id:"ue3",
+    label:"3 Jahre – Schuleintritt",
+    sub:"Beobachtungsbogen für Kinder von 3–6 Jahren",
+    baender:null,               // kein Bandmodell – Katalog verhält sich exakt wie bisher
+    bereiche:BEREICHE_UE3,
+    items:ITEMS_UE3
+  },
+  u3: {
+    id:"u3",
+    label:"0–3 Jahre",
+    sub:"Beobachtungsbogen für Kinder von 1–3 Jahren (Kernkatalog 1;0–2;11)",
+    baender:BAENDER_U3,
+    bereiche:BEREICHE_U3,
+    items:ITEMS_U3
+  }
+};
+let AKTIV_MODUS = MODI.ue3;
+let BEREICHE = AKTIV_MODUS.bereiche;
+let ITEMS = AKTIV_MODUS.items;
+
 function bereichOf(n){ return BEREICHE.find(b=> n>=b.from && n<=b.to); }
 function cssVar(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
 
 /* ---------- State ---------- */
-let werte = {};           // {n: 0|1|2}
-let logoDataUrl = null;   // base64 logo, wenn gewählt
-let verlauf = [];         // frühere Erhebungen aus geladener Datei
+let werte = {};              // {n: 0|1|2}
+let logoDataUrl = null;      // base64 logo, wenn gewählt
+let verlauf = [];            // frühere Erhebungen aus geladener Datei
+let aktuellesBandIndex = null; // Index des erreichten Altersbands (nur Krippenmodus); null = kein Bandmodell aktiv
+let wohlbefinden = null;     // 1–5, nur Krippenmodus
+let engagiertheit = null;    // 1–5, nur Krippenmodus
 ITEMS.forEach(it=> werte[it[0]] = 0);
+
+/* ---------- Altersbänder ---------- */
+function berechneAlterMonate(){
+  const geb = document.getElementById("kgeb").value;
+  const bis = document.getElementById("kdatum").value || heute();
+  if(!geb) return null;
+  const g = new Date(geb+"T00:00:00"), b = new Date(bis+"T00:00:00");
+  if(isNaN(g)||isNaN(b)) return null;
+  let m = (b.getFullYear()-g.getFullYear())*12 + (b.getMonth()-g.getMonth());
+  if(b.getDate() < g.getDate()) m--;
+  return Math.max(0, m);
+}
+function aktualisiereBand(){
+  const baender = AKTIV_MODUS.baender;
+  if(!baender){ aktuellesBandIndex = null; return; }
+  const alter = berechneAlterMonate();
+  if(alter===null){ aktuellesBandIndex = baender.length-1; return; } // ohne Geburtsdatum: Katalog vollständig nutzbar
+  let idx = -1;
+  baender.forEach((b,i)=>{ if(alter>=b.vonM) idx=i; });
+  aktuellesBandIndex = idx; // -1 = Kind jünger als das erste Band
+}
+function itemBandIndex(it){
+  const baender = AKTIV_MODUS.baender;
+  if(!baender) return -1;
+  return baender.findIndex(b=> b.id===it[3]);
+}
+function istErreicht(n){
+  if(!AKTIV_MODUS.baender) return true;
+  return itemBandIndex(ITEMS[n-1]) <= aktuellesBandIndex;
+}
+function istAnker(n){
+  const it = ITEMS[n-1];
+  return !!(it && it[4]);
+}
+function hatBewertungen(){
+  return Object.values(werte).some(v=>v>0);
+}
+function updateHinweis(){
+  const el = document.getElementById("u3Hinweis");
+  if(!el) return;
+  if(AKTIV_MODUS.baender && aktuellesBandIndex<0){
+    el.style.display="";
+    el.textContent = "Dieses Kind ist noch keine 12 Monate alt. Der Kernkatalog (1;0 – 2;11 Jahre) beginnt erst mit dem ersten Geburtstag.";
+  } else {
+    el.style.display="none";
+  }
+}
 
 /* ---------- Render Liste ---------- */
 const bereicheEl = document.getElementById("bereiche");
@@ -597,16 +926,30 @@ function renderListe(){
       <div class="items" data-items="${b.id}"></div>`;
     bereicheEl.appendChild(det);
     const wrap = det.querySelector(`[data-items="${b.id}"]`);
+    let letzterBand = null;
     for(let n=b.from; n<=b.to; n++){
       const it = ITEMS[n-1];
+      if(AKTIV_MODUS.baender){
+        const bandIdx = itemBandIndex(it);
+        if(bandIdx !== letzterBand){
+          letzterBand = bandIdx;
+          const bandInfo = AKTIV_MODUS.baender[bandIdx];
+          const bandHead = document.createElement("div");
+          bandHead.className = "banduberschrift";
+          bandHead.textContent = bandInfo.label;
+          wrap.appendChild(bandHead);
+        }
+      }
+      const reached = istErreicht(n);
       const row = document.createElement("div");
-      row.className = "item"; row.id = "item-"+n;
+      row.className = "item" + (reached? "" : " item-notyet"); row.id = "item-"+n;
       row.style.setProperty("--c", col);
+      const ankerZeichen = istAnker(n) ? ' <span class="anker-marker" title="Beobachtungsanker">⚓</span>' : "";
       row.innerHTML = `
         <span class="num">${n}</span>
-        <span class="txt"><b>${it[1]}</b> <span>– ${it[2]}</span></span>
+        <span class="txt"><b>${it[1]}${ankerZeichen}</b> <span>– ${it[2]}</span></span>
         <span class="statelabel" data-lab="${n}"></span>
-        <div class="box" role="button" tabindex="0" data-n="${n}" data-v="0" aria-label="${it[1]} bewerten">
+        <div class="box${reached?'':' box-disabled'}" role="button" tabindex="${reached?0:-1}" data-n="${n}" data-v="0" aria-label="${it[1]} bewerten" ${reached?'':'aria-disabled="true"'}>
           <div class="h left"></div><div class="h right"></div>
         </div>`;
       wrap.appendChild(row);
@@ -623,6 +966,7 @@ function renderListe(){
 
 const LABELS = ["", "im Werden", "sicher"];
 function cycle(n){
+  if(!istErreicht(n)) return;
   werte[n] = (werte[n]+1)%3;
   updateItem(n);
   updateProgress();
@@ -634,13 +978,16 @@ function updateItem(n){
   const box = document.querySelector(`.box[data-n="${n}"]`);
   if(box) box.dataset.v = werte[n];
   const lab = document.querySelector(`[data-lab="${n}"]`);
-  if(lab) lab.textContent = LABELS[werte[n]];
+  if(lab) lab.textContent = istErreicht(n) ? LABELS[werte[n]] : "noch nicht dran";
 }
 function updateProgress(){
   BEREICHE.forEach(b=>{
     let sum=0, max=0;
-    for(let n=b.from;n<=b.to;n++){ sum+=werte[n]; max+=2; }
-    const pct = Math.round(sum/max*100);
+    for(let n=b.from;n<=b.to;n++){
+      if(!istErreicht(n)) continue;
+      sum+=werte[n]; max+=2;
+    }
+    const pct = max? Math.round(sum/max*100) : 0;
     const bar = document.querySelector(`[data-prog="${b.id}"]`);
     const pctEl = document.querySelector(`[data-pct="${b.id}"]`);
     if(bar) bar.style.width = pct+"%";
@@ -648,6 +995,7 @@ function updateProgress(){
   });
 }
 function refreshAll(){
+  updateHinweis();
   ITEMS.forEach(it=> updateItem(it[0]));
   updateProgress();
   updateWheel();
@@ -660,10 +1008,14 @@ function refreshAll(){
 function berechneOffene(){
   return BEREICHE.map(b=>{
     const items=[];
-    for(let n=b.from;n<=b.to;n++){ if(werte[n]===0) items.push(ITEMS[n-1]); }
-    const total=b.to-b.from+1;
+    let total=0;
+    for(let n=b.from;n<=b.to;n++){
+      if(!istErreicht(n)) continue;
+      total++;
+      if(werte[n]===0) items.push(ITEMS[n-1]);
+    }
     const count=items.length;
-    const pct=Math.round(count/total*100);
+    const pct = total? Math.round(count/total*100) : 0;
     return {bereich:b, items, total, count, pct};
   });
 }
@@ -671,15 +1023,19 @@ function berechneOffene(){
 function updateOffene(){
   const daten = berechneOffene();
   const gesamtOffen = daten.reduce((s,d)=>s+d.count,0);
-  const gesamtTotal = 169;
+  const gesamtTotal = daten.reduce((s,d)=>s+d.total,0);
   const gEl = document.getElementById("offeneGesamt");
-  if(gEl) gEl.textContent = `${gesamtOffen} von ${gesamtTotal} insgesamt noch offen`;
+  if(gEl) gEl.textContent = gesamtTotal
+    ? `${gesamtOffen} von ${gesamtTotal} insgesamt noch offen`
+    : `Noch keine Kompetenzen für das aktuelle Alter fällig`;
 
   const wrap = document.getElementById("offeneListe");
   if(!wrap) return;
   wrap.innerHTML="";
   if(gesamtOffen===0){
-    wrap.innerHTML = `<div class="oall-done">Alle 169 Kompetenzen sind mindestens „im Werden" bepunktet.</div>`;
+    wrap.innerHTML = gesamtTotal
+      ? `<div class="oall-done">Alle ${gesamtTotal} bisher fälligen Kompetenzen sind mindestens „im Werden" bepunktet.</div>`
+      : `<div class="oall-done">Für das aktuelle Alter sind noch keine Kompetenzen fällig.</div>`;
     return;
   }
   daten.forEach(d=>{
@@ -698,7 +1054,8 @@ function updateOffene(){
     d.items.forEach(it=>{
       const row=document.createElement("div");
       row.className="oitem";
-      row.innerHTML = `<span class="num">${it[0]}</span><span class="txt"><b>${it[1]}</b> <span>– ${it[2]}</span></span>`;
+      const ankerZeichen = it[4] ? ' <span class="anker-marker" title="Beobachtungsanker">⚓</span>' : "";
+      row.innerHTML = `<span class="num">${it[0]}</span><span class="txt"><b>${it[1]}${ankerZeichen}</b> <span>– ${it[2]}</span></span>`;
       itemsWrap.appendChild(row);
     });
   });
@@ -715,7 +1072,7 @@ function polar(cx,cy,r,ang){ return [cx + r*Math.cos(ang), cy + r*Math.sin(ang)]
 function buildWheel(){
   SVG.innerHTML = "";
   wheelDots = {};
-  const total = 169;
+  const total = ITEMS.length;
   let startAng = -Math.PI/2; // oben beginnen
   BEREICHE.forEach(b=>{
     const count = b.to-b.from+1;
@@ -749,7 +1106,7 @@ function buildWheel(){
       c.setAttribute("cx",dx.toFixed(1)); c.setAttribute("cy",dy.toFixed(1));
       c.setAttribute("r","6"); c.setAttribute("class","wheel-dot");
       c.setAttribute("stroke",col); c.setAttribute("stroke-width","1.4");
-      c.dataset.n=n;
+      c.dataset.n=n; c.dataset.col=col;
       c.addEventListener("click",()=> jumpTo(n));
       const t = document.createElementNS(SVGNS,"title");
       t.textContent = n+" · "+ITEMS[n-1][1];
@@ -789,7 +1146,14 @@ function buildWheel(){
 function updateWheel(){
   for(const n in wheelDots){
     const c = wheelDots[n]; const v = werte[n];
-    const col = cssVar(bereichOf(+n).varc);
+    if(!istErreicht(+n)){
+      c.setAttribute("fill","#fff"); c.setAttribute("fill-opacity","1");
+      c.setAttribute("stroke","#d8dbd9"); c.setAttribute("stroke-dasharray","2,2");
+      continue;
+    }
+    c.setAttribute("stroke-dasharray","");
+    const col = c.dataset.col || cssVar(bereichOf(+n).varc);
+    c.setAttribute("stroke",col);
     if(v===0){ c.setAttribute("fill","#fff"); c.setAttribute("fill-opacity","1"); }
     else if(v===1){ c.setAttribute("fill",col); c.setAttribute("fill-opacity","0.5"); }
     else { c.setAttribute("fill",col); c.setAttribute("fill-opacity","1"); }
@@ -817,11 +1181,39 @@ function setNotizen(o){
   document.querySelectorAll("[data-note]").forEach(t=> t.value = (o&&o[t.dataset.note])||"");
 }
 
+/* ---------- Eingewöhnung (einmalig pro Kind, kein Bewertungsraster) ---------- */
+const EINGEWOEHNUNG_FELDER = ["egBeginn","egEnde","egBezugsfachkraft","egBegleitperson","egTrennDatum","egTrennDauer","egTrost","egSchlafenAb","egEssenAb","egWickelnAb","egBesonderheiten"];
+function sammleEingewoehnung(){
+  const o={};
+  EINGEWOEHNUNG_FELDER.forEach(id=>{ const el=document.getElementById(id); if(el) o[id]=el.value; });
+  return o;
+}
+function setEingewoehnung(o){
+  EINGEWOEHNUNG_FELDER.forEach(id=>{ const el=document.getElementById(id); if(el) el.value=(o&&o[id])||""; });
+}
+
+/* ---------- Wohlbefinden & Engagiertheit ---------- */
+function syncSkalen(){
+  document.querySelectorAll('.skala[data-skala="wohlbefinden"] button').forEach(b=> b.classList.toggle('active', +b.dataset.wert===wohlbefinden));
+  document.querySelectorAll('.skala[data-skala="engagiertheit"] button').forEach(b=> b.classList.toggle('active', +b.dataset.wert===engagiertheit));
+}
+document.querySelectorAll('.skala').forEach(sk=>{
+  sk.querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const wert = +btn.dataset.wert;
+      if(sk.dataset.skala==='wohlbefinden') wohlbefinden = (wohlbefinden===wert? null: wert);
+      else engagiertheit = (engagiertheit===wert? null: wert);
+      syncSkalen();
+    });
+  });
+});
+
 /* ---------- Datei-Handling ---------- */
 function sammleDaten(){
   return {
     typ:"entwicklungsschnecke",
-    version:1,
+    version:2,
+    katalog: AKTIV_MODUS.id,
     kind:{
       name: document.getElementById("kname").value.trim(),
       geburtsdatum: document.getElementById("kgeb").value
@@ -829,8 +1221,10 @@ function sammleDaten(){
     aktuell:{
       datum: document.getElementById("kdatum").value,
       werte: {...werte},
-      notizen: getNotizen()
+      notizen: getNotizen(),
+      wohlbefinden, engagiertheit
     },
+    eingewoehnung: sammleEingewoehnung(),
     verlauf: verlauf
   };
 }
@@ -841,7 +1235,10 @@ function leeren(){
   document.getElementById("kdatum").value=heute();
   ITEMS.forEach(it=> werte[it[0]]=0);
   setNotizen({});
+  setEingewoehnung({});
+  wohlbefinden = null; engagiertheit = null; syncSkalen();
   verlauf = [];
+  aktualisiereBand();
   renderVerlauf();
   refreshAll();
   window.scrollTo({top:0,behavior:"smooth"});
@@ -857,7 +1254,8 @@ async function speichern(){
   if(!name){ alert("Bitte zuerst den Namen des Kindes eintragen."); document.getElementById("kname").focus(); return; }
   const data = sammleDaten();
   // aktuelle Erhebung in den Verlauf übernehmen (nach Datum ersetzen/anhängen)
-  const eintrag = {datum:data.aktuell.datum||heute(), werte:data.aktuell.werte, notizen:data.aktuell.notizen};
+  const eintrag = {datum:data.aktuell.datum||heute(), werte:data.aktuell.werte, notizen:data.aktuell.notizen,
+    wohlbefinden:data.aktuell.wohlbefinden, engagiertheit:data.aktuell.engagiertheit, katalog:data.katalog};
   const idx = data.verlauf.findIndex(e=> e.datum===eintrag.datum);
   if(idx>=0) data.verlauf[idx]=eintrag; else data.verlauf.push(eintrag);
   data.verlauf.sort((a,b)=> a.datum<b.datum?1:-1);
@@ -893,13 +1291,20 @@ function oeffnen(file){
     try{
       const d = JSON.parse(reader.result);
       if(d.typ!=="entwicklungsschnecke") throw new Error("Falscher Dateityp");
+      const katalog = (d.katalog==="u3") ? "u3" : "ue3"; // ältere Dateien ohne katalog-Feld: Ü3-Katalog
+      wechsleModus(katalog, {force:true});
       document.getElementById("kname").value = (d.kind&&d.kind.name)||"";
       document.getElementById("kgeb").value = (d.kind&&d.kind.geburtsdatum)||"";
       const a = d.aktuell || {};
       document.getElementById("kdatum").value = a.datum || heute();
       ITEMS.forEach(it=> werte[it[0]] = (a.werte&&a.werte[it[0]])||0);
       setNotizen(a.notizen||{});
+      setEingewoehnung(d.eingewoehnung||{});
+      wohlbefinden = a.wohlbefinden ?? null;
+      engagiertheit = a.engagiertheit ?? null;
+      syncSkalen();
       verlauf = Array.isArray(d.verlauf)? d.verlauf : [];
+      aktualisiereBand();
       renderVerlauf();
       refreshAll();
       window.scrollTo({top:0,behavior:"smooth"});
@@ -915,11 +1320,12 @@ function renderVerlauf(){
   el.innerHTML = "";
   verlauf.forEach((e,i)=>{
     let sum=0; for(const k in e.werte) sum+=e.werte[k];
-    const pct = Math.round(sum/(169*2)*100);
+    const pct = Math.round(sum/(ITEMS.length*2)*100);
+    const wohlTxt = (e.wohlbefinden||e.engagiertheit) ? ` · W ${e.wohlbefinden??"–"}/E ${e.engagiertheit??"–"}` : "";
     const row = document.createElement("div");
     row.className="verlauf-item";
     row.innerHTML = `<span class="d">${e.datum||"ohne Datum"}</span>
-      <span class="hint">Ø ${pct} %</span>
+      <span class="hint">Ø ${pct} %${wohlTxt}</span>
       <span class="mini-actions"><button data-load="${i}">In Formular laden</button></span>`;
     el.appendChild(row);
   });
@@ -929,11 +1335,65 @@ function renderVerlauf(){
       document.getElementById("kdatum").value = e.datum||heute();
       ITEMS.forEach(it=> werte[it[0]] = (e.werte&&e.werte[it[0]])||0);
       setNotizen(e.notizen||{});
+      wohlbefinden = e.wohlbefinden ?? null;
+      engagiertheit = e.engagiertheit ?? null;
+      syncSkalen();
+      aktualisiereBand();
       refreshAll();
       window.scrollTo({top:0,behavior:"smooth"});
     });
   });
 }
+
+/* ---------- Moduswahl ---------- */
+function applyModeTexts(){
+  const subEl = document.getElementById("modeSub");
+  if(subEl) subEl.textContent = `${AKTIV_MODUS.sub} · ${ITEMS.length} Beobachtungspunkte`;
+  const offeneTitel = document.getElementById("offeneTitel");
+  if(offeneTitel) offeneTitel.textContent = AKTIV_MODUS.baender ? "Woran wir gerade arbeiten" : "Noch nicht bepunktete Kompetenzen";
+  const legendNotYet = document.getElementById("legendNotYet");
+  if(legendNotYet) legendNotYet.style.display = AKTIV_MODUS.baender ? "" : "none";
+  const wohlPanel = document.getElementById("wohlPanel");
+  if(wohlPanel) wohlPanel.style.display = AKTIV_MODUS.baender ? "" : "none";
+  const egPanel = document.getElementById("eingewoehnungPanel");
+  if(egPanel) egPanel.style.display = AKTIV_MODUS.baender ? "" : "none";
+}
+function syncModeButtons(){
+  document.querySelectorAll(".modetab").forEach(btn=>{
+    const aktiv = btn.dataset.mode===AKTIV_MODUS.id;
+    btn.classList.toggle("active", aktiv);
+    btn.setAttribute("aria-selected", aktiv? "true":"false");
+  });
+}
+function wechsleModus(neuerId, opts){
+  opts = opts||{};
+  if(AKTIV_MODUS.id===neuerId) return;
+  if(!opts.force && hatBewertungen()){
+    const ok = confirm("Der Bogen enthält Bewertungen. Beim Wechsel in einen anderen Katalog werden sie im Formular nicht übernommen – gespeicherte Dateien bleiben unverändert. Trotzdem wechseln?");
+    if(!ok){ syncModeButtons(); return; }
+  }
+  AKTIV_MODUS = MODI[neuerId];
+  BEREICHE = AKTIV_MODUS.bereiche;
+  ITEMS = AKTIV_MODUS.items;
+  werte = {};
+  ITEMS.forEach(it=> werte[it[0]]=0);
+  aktualisiereBand();
+  applyModeTexts();
+  syncModeButtons();
+  buildWheel();
+  renderListe();
+}
+document.querySelectorAll(".modetab").forEach(btn=>{
+  btn.addEventListener("click", ()=> wechsleModus(btn.dataset.mode));
+});
+document.getElementById("kgeb").addEventListener("change", ()=>{
+  const alter = berechneAlterMonate();
+  if(alter!==null && !hatBewertungen()){
+    const empfohlen = alter < 36 ? "u3" : "ue3";
+    if(empfohlen !== AKTIV_MODUS.id){ wechsleModus(empfohlen, {force:true}); return; }
+  }
+  aktualisiereBand(); refreshAll();
+});
 
 /* ---------- Logo ---------- */
 const logoBox = document.getElementById("logoBox");
@@ -978,7 +1438,7 @@ function buildPrintWheel(){
   const VBW=1120, VBH=1120; svg.setAttribute("viewBox",`0 0 ${VBW} ${VBH}`);
   svg.setAttribute("width",VBW); svg.setAttribute("height",VBH);
   svg.setAttribute("preserveAspectRatio","xMidYMid meet");
-  const cx=560, cy=560, rIn=98, rOut=410, total=169;
+  const cx=560, cy=560, rIn=98, rOut=410, total=ITEMS.length;
   let start=-Math.PI/2;
   BEREICHE.forEach(b=>{
     const count=b.to-b.from+1;
@@ -1084,6 +1544,9 @@ function syncKopf(prefix){
   document.getElementById(prefix+"Datum").textContent = fmtDate(document.getElementById("kdatum").value);
   const pl = document.getElementById(prefix+"Logo");
   if(logoDataUrl){ pl.src = logoDataUrl; pl.style.display=""; } else { pl.style.display="none"; }
+  const container = document.getElementById(prefix==="ph" ? "printHead" : "printFach");
+  const subEl = container && container.querySelector(".ph-sub");
+  if(subEl) subEl.textContent = `${AKTIV_MODUS.sub} · ${ITEMS.length} Beobachtungspunkte`;
 }
 
 function syncPrint(){
@@ -1104,8 +1567,11 @@ function renderSchlagwoerter(container){
   container.innerHTML="";
   const daten = berechneOffene();
   const gesamtOffen = daten.reduce((s,d)=>s+d.count,0);
+  const gesamtTotal = daten.reduce((s,d)=>s+d.total,0);
   if(gesamtOffen===0){
-    container.innerHTML = `<div class="pf-alldone">Alle 169 Kompetenzen sind mindestens „im Werden" bepunktet.</div>`;
+    container.innerHTML = gesamtTotal
+      ? `<div class="pf-alldone">Alle ${gesamtTotal} bisher fälligen Kompetenzen sind mindestens „im Werden" bepunktet.</div>`
+      : `<div class="pf-alldone">Für das aktuelle Alter sind noch keine Kompetenzen fällig.</div>`;
     return;
   }
   daten.forEach(d=>{
@@ -1118,7 +1584,7 @@ function renderSchlagwoerter(container){
     d.items.forEach(it=>{
       const chip=document.createElement("span");
       chip.className="pf-chip"; chip.style.color=col;
-      chip.innerHTML = `<b>${it[0]}</b>${it[1]}`;
+      chip.innerHTML = `<b>${it[0]}${it[4]?' ⚓':''}</b>${it[1]}`;
       row.appendChild(chip);
     });
     container.appendChild(block);
@@ -1193,7 +1659,7 @@ function updateVergleich(){
     `Basis: ${fmtDate(v.basis.datum)} · ${neu} neu erreicht`;
   fuelleVergleich(document.getElementById("vergleichListe"), v);
 }
-document.getElementById("kdatum").addEventListener("change", updateVergleich);
+document.getElementById("kdatum").addEventListener("change", ()=>{ aktualisiereBand(); refreshAll(); });
 
 /* ---------- Notizen auf dem Fachkraft-Blatt ---------- */
 const NOTIZ_LABELS = {
@@ -1227,8 +1693,10 @@ function syncPrintFach(){
   holder.innerHTML="";
   holder.appendChild(buildPrintWheel());
   renderStatsInto(document.getElementById("pfStats"));
-  const gesamtOffen = berechneOffene().reduce((s,d)=>s+d.count,0);
-  document.getElementById("pfGesamt").textContent = `(${gesamtOffen} von 169 insgesamt offen)`;
+  const daten = berechneOffene();
+  const gesamtOffen = daten.reduce((s,d)=>s+d.count,0);
+  const gesamtTotal = daten.reduce((s,d)=>s+d.total,0);
+  document.getElementById("pfGesamt").textContent = `(${gesamtOffen} von ${gesamtTotal} insgesamt offen)`;
   const vglBlock=document.getElementById("pfVergleichBlock");
   const v=berechneVergleich();
   if(v){
@@ -1238,8 +1706,48 @@ function syncPrintFach(){
   } else {
     vglBlock.style.display="none";
   }
+
+  // Wohlbefinden & Engagiertheit (nur Krippenmodus)
+  const wohlBlock = document.getElementById("pfWohlBlock");
+  if(AKTIV_MODUS.baender){
+    wohlBlock.style.display="";
+    document.getElementById("pfWohlInhalt").textContent =
+      `Wohlbefinden: ${wohlbefinden? wohlbefinden+"/5":"nicht eingeschätzt"} · Engagiertheit: ${engagiertheit? engagiertheit+"/5":"nicht eingeschätzt"}`;
+  } else {
+    wohlBlock.style.display="none";
+  }
+
+  // Beobachtungsanker: Gesprächsanlass-Hinweis, wenn offene Anker-Punkte im erreichten Bereich vorhanden sind
+  const ankerHinweis = document.getElementById("pfAnkerHinweis");
+  const offeneAnker = daten.some(d=> d.items.some(it=> it[4]));
+  if(AKTIV_MODUS.baender && offeneAnker){
+    ankerHinweis.style.display="";
+    ankerHinweis.textContent = "⚓ markierte Punkte: Gesprächsanlass, wenn am Ende des aktuellen Altersbands noch nicht beobachtet – Rücksprache mit den Eltern, ggf. Hinweis auf die nächste U-Untersuchung.";
+  } else {
+    ankerHinweis.style.display="none";
+  }
+
   renderSchlagwoerter(document.getElementById("pfChips"));
   renderNotizenPrint();
+
+  // Eingewöhnung (nur Krippenmodus, nur wenn ausgefüllt)
+  const egBlock = document.getElementById("pfEingewoehnungBlock");
+  if(AKTIV_MODUS.baender){
+    const eg = sammleEingewoehnung();
+    const labels = {egBeginn:"Beginn", egEnde:"Ende", egBezugsfachkraft:"Bezugsfachkraft", egBegleitperson:"Begleitende Person",
+      egTrennDatum:"Erster Trennungsversuch – Datum", egTrennDauer:"Erster Trennungsversuch – Dauer (Min.)", egTrost:"Trost",
+      egSchlafenAb:"Schlafen möglich ab", egEssenAb:"Essen möglich ab", egWickelnAb:"Wickeln/Toilette möglich ab", egBesonderheiten:"Besonderheiten"};
+    const zeilen = Object.keys(labels).filter(k=> (eg[k]||"").trim()!=="");
+    if(zeilen.length){
+      egBlock.style.display="";
+      document.getElementById("pfEingewoehnung").innerHTML = zeilen.map(k=>
+        `<div class="pf-note"><h5>${labels[k]}</h5><p>${eg[k]}</p></div>`).join("");
+    } else {
+      egBlock.style.display="none";
+    }
+  } else {
+    egBlock.style.display="none";
+  }
 }
 
 /* ---------- Buttons ---------- */
@@ -1268,6 +1776,9 @@ document.getElementById("btnNeu").addEventListener("click", ()=>{
 
 /* ---------- Init ---------- */
 document.getElementById("kdatum").value = heute();
+applyModeTexts();
+syncModeButtons();
+aktualisiereBand();
 renderListe();
 buildWheel();
 renderVerlauf();
