@@ -142,6 +142,8 @@
   .verlauf-item .d{font-weight:600}
   .verlauf-item .mini-actions{margin-left:auto; display:flex; gap:6px}
   .verlauf-item button{padding:4px 8px; font-size:12px}
+  .verlauf-kat{display:inline-block; margin-left:6px; padding:1px 7px; border-radius:10px;
+    background:#eef1f0; color:var(--muted); font-size:11px; white-space:nowrap}
 
   .hint{font-size:12px; color:var(--muted); margin-top:6px}
   svg#wheel{width:100%; height:auto; display:block}
@@ -847,6 +849,7 @@ const MODI = {
     id:"ue3",
     label:"3 Jahre – Schuleintritt",
     sub:"Beobachtungsbogen für Kinder von 3–6 Jahren",
+    mitte:"Eintritt Kindergarten",
     baender:null,               // kein Bandmodell – Katalog verhält sich exakt wie bisher
     bereiche:BEREICHE_UE3,
     items:ITEMS_UE3
@@ -855,6 +858,7 @@ const MODI = {
     id:"u3",
     label:"0–3 Jahre",
     sub:"Beobachtungsbogen für Kinder von 1–3 Jahren (Kernkatalog 1;0–2;11)",
+    mitte:"Eintritt Krippe",
     baender:BAENDER_U3,
     bereiche:BEREICHE_U3,
     items:ITEMS_U3
@@ -1157,7 +1161,7 @@ function buildWheel(){
   const tm2 = document.createElementNS(SVGNS,"text");
   tm2.setAttribute("x",CX); tm2.setAttribute("y",CY+9); tm2.setAttribute("text-anchor","middle");
   tm2.setAttribute("font-size","6"); tm2.setAttribute("fill","#888");
-  tm2.textContent="Eintritt Kindergarten"; SVG.appendChild(tm2);
+  tm2.textContent=AKTIV_MODUS.mitte; SVG.appendChild(tm2);
   updateWheel();
 }
 function updateWheel(){
@@ -1270,10 +1274,12 @@ async function speichern(){
   const name = document.getElementById("kname").value.trim();
   if(!name){ alert("Bitte zuerst den Namen des Kindes eintragen."); document.getElementById("kname").focus(); return; }
   const data = sammleDaten();
-  // aktuelle Erhebung in den Verlauf übernehmen (nach Datum ersetzen/anhängen)
+  // aktuelle Erhebung in den Verlauf übernehmen (nach Datum UND Katalog ersetzen/anhängen).
+  // Ohne Katalogvergleich würde am Übergangstag eine Krippenerhebung vom selben Datum
+  // durch die Kindergartenerhebung überschrieben.
   const eintrag = {datum:data.aktuell.datum||heute(), werte:data.aktuell.werte, notizen:data.aktuell.notizen,
     wohlbefinden:data.aktuell.wohlbefinden, engagiertheit:data.aktuell.engagiertheit, katalog:data.katalog};
-  const idx = data.verlauf.findIndex(e=> e.datum===eintrag.datum);
+  const idx = data.verlauf.findIndex(e=> e.datum===eintrag.datum && katalogVon(e)===data.katalog);
   if(idx>=0) data.verlauf[idx]=eintrag; else data.verlauf.push(eintrag);
   data.verlauf.sort((a,b)=> a.datum<b.datum?1:-1);
 
@@ -1331,24 +1337,40 @@ function oeffnen(file){
 }
 
 /* ---------- Verlauf-Panel ---------- */
+// Katalog eines Verlaufseintrags. Alte Dateien (version 1) kennen das Feld nicht –
+// die stammen immer aus dem 3-6-Jahre-Katalog.
+function katalogVon(eintrag){ return (eintrag && eintrag.katalog === "u3") ? "u3" : "ue3"; }
+
 function renderVerlauf(){
   const el = document.getElementById("verlaufList");
   if(!verlauf.length){ el.innerHTML = `<p class="hint">Noch keine gespeicherten Erhebungen in dieser Datei.</p>`; return; }
   el.innerHTML = "";
   verlauf.forEach((e,i)=>{
+    const kat = katalogVon(e);
+    const modus = MODI[kat];
+    // Prozent immer gegen den Katalog rechnen, aus dem der Eintrag stammt
     let sum=0; for(const k in e.werte) sum+=e.werte[k];
-    const pct = Math.round(sum/(ITEMS.length*2)*100);
+    const pct = Math.round(sum/(modus.items.length*2)*100);
     const wohlTxt = (e.wohlbefinden||e.engagiertheit) ? ` · W ${e.wohlbefinden??"–"}/E ${e.engagiertheit??"–"}` : "";
+    const fremd = kat !== AKTIV_MODUS.id;
+    const katTxt = fremd ? ` <span class="verlauf-kat">${modus.label}</span>` : "";
     const row = document.createElement("div");
     row.className="verlauf-item";
     row.innerHTML = `<span class="d">${e.datum||"ohne Datum"}</span>
-      <span class="hint">Ø ${pct} %${wohlTxt}</span>
+      <span class="hint">Ø ${pct} %${wohlTxt}${katTxt}</span>
       <span class="mini-actions"><button data-load="${i}">In Formular laden</button></span>`;
     el.appendChild(row);
   });
   el.querySelectorAll("[data-load]").forEach(btn=>{
     btn.addEventListener("click", ()=>{
       const e = verlauf[+btn.dataset.load];
+      const kat = katalogVon(e);
+      // Eintrag aus dem anderen Katalog: erst umschalten, sonst landen die Werte
+      // auf voellig anderen Kompetenzen (Nummern bedeuten je Katalog etwas anderes)
+      if(kat !== AKTIV_MODUS.id){
+        if(!confirm(`Diese Erhebung stammt aus dem Katalog „${MODI[kat].label}". Zum Laden wird dorthin gewechselt. Fortfahren?`)) return;
+        wechsleModus(kat, {force:true});
+      }
       document.getElementById("kdatum").value = e.datum||heute();
       ITEMS.forEach(it=> werte[it[0]] = (e.werte&&e.werte[it[0]])||0);
       setNotizen(e.notizen||{});
@@ -1534,7 +1556,7 @@ function buildPrintWheel(){
   const tm=document.createElementNS(NS,"text"); tm.setAttribute("x",cx); tm.setAttribute("y",cy-4);
   tm.setAttribute("text-anchor","middle"); tm.setAttribute("font-size","17"); tm.setAttribute("font-weight","700"); tm.setAttribute("fill","#333"); tm.textContent="Start"; svg.appendChild(tm);
   const tm2=document.createElementNS(NS,"text"); tm2.setAttribute("x",cx); tm2.setAttribute("y",cy+14);
-  tm2.setAttribute("text-anchor","middle"); tm2.setAttribute("font-size","9"); tm2.setAttribute("fill","#888"); tm2.textContent="Eintritt Kindergarten"; svg.appendChild(tm2);
+  tm2.setAttribute("text-anchor","middle"); tm2.setAttribute("font-size","9"); tm2.setAttribute("fill","#888"); tm2.textContent=AKTIV_MODUS.mitte; svg.appendChild(tm2);
   return svg;
 }
 
@@ -1611,10 +1633,12 @@ function renderSchlagwoerter(container){
 /* ---------- Entwicklungsvergleich zur letzten Beobachtung ---------- */
 function bereichFuer(n){ return BEREICHE.find(b=> n>=b.from && n<=b.to); }
 
-// Jüngste frühere Erhebung (Datum vor dem aktuellen Beobachtungsdatum) als Vergleichsbasis
+// Jüngste frühere Erhebung (Datum vor dem aktuellen Beobachtungsdatum) als Vergleichsbasis.
+// Nur Erhebungen aus demselben Katalog: Punktnummern bedeuten in U3 und Ü3 verschiedene
+// Kompetenzen, ein katalogübergreifender Vergleich würde erfundene Rückschritte melden.
 function vergleichsBasis(){
   const cur = document.getElementById("kdatum").value || heute();
-  return verlauf.find(e=> (e.datum||"") < cur) || null;
+  return verlauf.find(e=> (e.datum||"") < cur && katalogVon(e) === AKTIV_MODUS.id) || null;
 }
 
 function berechneVergleich(){
