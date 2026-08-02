@@ -13,7 +13,7 @@ Der Moduswechsel schlägt sich aus dem Geburtsdatum vor, lässt sich aber jederz
 
 1. Auf github.com anmelden und oben rechts über **+ → New repository** ein neues Repository anlegen, zum Beispiel `entwicklungsschnecke`. Sichtbarkeit **Public**. **Create repository**.
 2. Auf der nächsten Seite **uploading an existing file** anklicken.
-3. Alle Dateien aus diesem Ordner hochladen: `index.html`, `manifest.webmanifest`, `icon-512.png`, `icon-192.png`, `apple-touch-icon.png`, `favicon.png`. Dann **Commit changes**.
+3. Alle Dateien aus diesem Ordner hochladen: `index.html`, `sw.js`, `manifest.webmanifest`, `icon-512.png`, `icon-192.png`, `apple-touch-icon.png`, `favicon.png`. Dann **Commit changes**.
 4. Im Repository auf **Settings → Pages** gehen. Unter *Build and deployment* bei *Source* **Deploy from a branch** wählen, Branch **main** und Ordner **/ (root)**, dann **Save**.
 5. Nach ein bis zwei Minuten erscheint oben die Adresse, unter der die App erreichbar ist – etwa `https://DEINNAME.github.io/entwicklungsschnecke/`.
 
@@ -21,6 +21,15 @@ Der Moduswechsel schlägt sich aus dem Geburtsdatum vor, lässt sich aber jederz
 
 Die Adresse im Safari öffnen, dann **Teilen → Zum Home-Bildschirm** (bzw. am Mac **Teilen → Zum Dock hinzufügen**). Das farbige Schnecken-Icon wird automatisch verwendet.
 
+## Ohne Internet arbeiten
+
+Die App funktioniert auch ohne Empfang – wichtig für Waldtage. Dafür muss sie **einmal mit Internetverbindung geöffnet** worden sein; danach liegt sie auf dem Gerät und startet auch offline. Sobald wieder Empfang besteht, holt sie sich beim nächsten Öffnen automatisch die aktuelle Fassung.
+
 ## Datenschutz
 
-Kinderdaten werden ausschließlich als Datei auf dem eigenen Gerät gespeichert. Die veröffentlichte Seite enthält nur die App selbst, keine Kinderdaten.
+Kinderdaten verlassen das Gerät nicht. Sie werden dort an zwei Stellen abgelegt:
+
+- **Gespeicherte Kind-Dateien** – die JSON-Dateien, die „Kind speichern“ anlegt.
+- **Ein Entwurf im Browserspeicher** – damit eine begonnene Beobachtung nicht verloren geht, wenn das Tablet in den Ruhezustand geht. Der Entwurf wird gelöscht, sobald „Kind speichern“ oder „Neues Kind (leeren)“ gedrückt wird. Wird beim Start gefragt, ob ein Entwurf wiederhergestellt werden soll, und man antwortet mit Nein, bleibt der Entwurf vorsichtshalber erhalten – ein Fehltipp soll keine Beobachtungsarbeit vernichten.
+
+Die veröffentlichte Seite enthält nur die App selbst, keine Kinderdaten.

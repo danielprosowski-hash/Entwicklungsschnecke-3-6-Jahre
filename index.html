@@ -987,6 +987,7 @@ const LABELS = ["", "im Werden", "sicher"];
 function cycle(n){
   if(!istErreicht(n)) return;
   werte[n] = (werte[n]+1)%3;
+  if(typeof markiereGeaendert === "function") markiereGeaendert();
   updateItem(n);
   updateProgress();
   updateWheel();
@@ -1222,6 +1223,7 @@ document.querySelectorAll('.skala').forEach(sk=>{
       const wert = +btn.dataset.wert;
       if(sk.dataset.skala==='wohlbefinden') wohlbefinden = (wohlbefinden===wert? null: wert);
       else engagiertheit = (engagiertheit===wert? null: wert);
+      if(typeof markiereGeaendert === "function") markiereGeaendert();
       syncSkalen();
     });
   });
@@ -1260,6 +1262,7 @@ function leeren(){
   aktualisiereBand();
   renderVerlauf();
   refreshAll();
+  if(typeof entwurfLoeschen === "function") entwurfLoeschen();
   window.scrollTo({top:0,behavior:"smooth"});
 }
 
@@ -1328,6 +1331,7 @@ function oeffnen(file){
       aktualisiereBand();
       renderVerlauf();
       refreshAll();
+      if(typeof entwurfLoeschen === "function") entwurfLoeschen();
       window.scrollTo({top:0,behavior:"smooth"});
     }catch(e){ alert("Datei konnte nicht gelesen werden: "+e.message); }
   };
@@ -1813,6 +1817,90 @@ document.getElementById("btnNeu").addEventListener("click", ()=>{
   if(confirm("Formular leeren? Nicht gespeicherte Eingaben gehen verloren.")) leeren();
 });
 
+/* ---------- Entwurfs-Sicherung ----------
+   Schützt vor Datenverlust, wenn das Tablet in den Ruhezustand geht oder der Browser
+   den Tab verwirft, bevor „Kind speichern“ gedrückt wurde. Der Entwurf liegt im
+   Browserspeicher desselben Geräts und wird beim Speichern oder Leeren gelöscht. */
+const ENTWURF_KEY = "entwicklungsschnecke:entwurf";
+let ungespeichert = false;
+let entwurfTimer = null;
+
+function entwurfSchreiben(){
+  try{
+    const daten = sammleDaten();
+    daten.entwurfZeit = new Date().toISOString();
+    localStorage.setItem(ENTWURF_KEY, JSON.stringify(daten));
+  }catch(e){ /* Speicher voll oder gesperrt: Entwurf ist Zusatz, kein Muss */ }
+}
+function entwurfLoeschen(){
+  ungespeichert = false;
+  clearTimeout(entwurfTimer);
+  try{ localStorage.removeItem(ENTWURF_KEY); }catch(e){}
+}
+function markiereGeaendert(){
+  ungespeichert = true;
+  clearTimeout(entwurfTimer);
+  entwurfTimer = setTimeout(entwurfSchreiben, 800);
+}
+// Alle Formularfelder (Name, Daten, Notizen, Eingewöhnung) erfassen
+document.addEventListener("input", markiereGeaendert);
+document.addEventListener("change", markiereGeaendert);
+
+window.addEventListener("beforeunload", e=>{
+  if(!ungespeichert) return;
+  e.preventDefault();
+  e.returnValue = "";
+});
+
+function entwurfAnbieten(){
+  // Einmal pro Browsersitzung fragen – wer eben „nein“ gesagt hat, soll nicht erneut gefragt werden
+  try{ if(sessionStorage.getItem(ENTWURF_KEY+":abgelehnt")) return; }catch(e){}
+
+  let roh = null;
+  try{ roh = localStorage.getItem(ENTWURF_KEY); }catch(e){ return; }
+  if(!roh) return;
+  let d;
+  try{ d = JSON.parse(roh); }catch(e){ entwurfLoeschen(); return; }
+  if(!d || d.typ !== "entwicklungsschnecke"){ entwurfLoeschen(); return; }
+
+  const name = (d.kind && d.kind.name || "").trim();
+  const zeit = d.entwurfZeit ? new Date(d.entwurfZeit) : null;
+  const wann = zeit ? `${fmtDate(d.entwurfZeit.slice(0,10))}, ${zeit.getHours()}:${String(zeit.getMinutes()).padStart(2,"0")} Uhr` : "unbekannter Zeitpunkt";
+  const wer = name ? `für ${name}` : "ohne Namen";
+  if(!confirm(`Es gibt eine nicht gespeicherte Beobachtung ${wer} vom ${wann}.\n\nWiederherstellen?`)){
+    // Der Entwurf wird bewusst NICHT gelöscht: ein Fehltipp darf keine Beobachtungsarbeit
+    // vernichten. Er verschwindet nur beim Speichern, beim Leeren oder beim Öffnen einer Datei.
+    try{ sessionStorage.setItem(ENTWURF_KEY+":abgelehnt","1"); }catch(e){}
+    return;
+  }
+
+  const katalog = (d.katalog === "u3") ? "u3" : "ue3";
+  wechsleModus(katalog, {force:true});
+  document.getElementById("kname").value = (d.kind && d.kind.name) || "";
+  document.getElementById("kgeb").value = (d.kind && d.kind.geburtsdatum) || "";
+  const a = d.aktuell || {};
+  document.getElementById("kdatum").value = a.datum || heute();
+  ITEMS.forEach(it=> werte[it[0]] = (a.werte && a.werte[it[0]]) || 0);
+  setNotizen(a.notizen || {});
+  setEingewoehnung(d.eingewoehnung || {});
+  wohlbefinden = a.wohlbefinden ?? null;
+  engagiertheit = a.engagiertheit ?? null;
+  syncSkalen();
+  verlauf = Array.isArray(d.verlauf) ? d.verlauf : [];
+  aktualisiereBand();
+  renderVerlauf();
+  renderListe();
+  ungespeichert = true;   // bleibt ungespeichert, bis bewusst gesichert wird
+}
+
+/* ---------- Offlinebetrieb ---------- */
+if("serviceWorker" in navigator){
+  window.addEventListener("load", ()=>{
+    // Schlägt auf file:// fehl – das ist beim lokalen Öffnen normal und ohne Folgen
+    navigator.serviceWorker.register("sw.js").catch(()=>{});
+  });
+}
+
 /* ---------- Init ---------- */
 document.getElementById("kdatum").value = heute();
 applyModeTexts();
@@ -1821,6 +1909,7 @@ aktualisiereBand();
 renderListe();
 buildWheel();
 renderVerlauf();
+entwurfAnbieten();
 </script>
 </body>
 </html>
