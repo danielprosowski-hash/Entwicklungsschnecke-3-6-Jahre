@@ -247,7 +247,7 @@
   <div id="logoBox" title="Logo wählen (klick)">Logo<br>wählen</div>
   <div class="titlewrap">
     <h1>Entwicklungsschnecke</h1>
-    <p id="modeSub">Beobachtungsbogen für Kinder von 3–6 Jahren · 169 Beobachtungspunkte</p>
+    <p id="modeSub">Beobachtungsbogen für Kinder von 3–6 Jahren · 180 Beobachtungspunkte</p>
     <div class="modetabs noprint" role="tablist" aria-label="Altersbereich wählen">
       <button type="button" class="modetab" data-mode="u3" role="tab" aria-selected="false">0–3 Jahre</button>
       <button type="button" class="modetab active" data-mode="ue3" role="tab" aria-selected="true">3 Jahre – Schuleintritt</button>
@@ -270,7 +270,7 @@
     <img id="phLogo" alt="Logo">
     <div class="ph-titles">
       <div class="ph-h1">Entwicklungsschnecke</div>
-      <div class="ph-sub">Beobachtungsbogen für Kinder von 3–6 Jahren · 169 Beobachtungspunkte</div>
+      <div class="ph-sub">Beobachtungsbogen für Kinder von 3–6 Jahren · 180 Beobachtungspunkte</div>
     </div>
     <div class="ph-kid">
       <div><span>Kind</span><b id="phName">—</b></div>
@@ -296,7 +296,7 @@
     <img id="pfLogo" alt="Logo">
     <div class="ph-titles">
       <div class="ph-h1">Entwicklungsschnecke – Fachkraft-Auswertung</div>
-      <div class="ph-sub">Beobachtungsbogen für Kinder von 3–6 Jahren · 169 Beobachtungspunkte</div>
+      <div class="ph-sub">Beobachtungsbogen für Kinder von 3–6 Jahren · 180 Beobachtungspunkte</div>
     </div>
     <div class="ph-kid">
       <div><span>Kind</span><b id="pfName">—</b></div>
@@ -485,17 +485,18 @@
 <script>
 "use strict";
 
-/* ---------- Katalog 3–6 Jahre: 169 Beobachtungspunkte (unverändert) ---------- */
+/* ---------- Katalog 3 Jahre – Schuleintritt: 180 Beobachtungspunkte, Waldkindergarten-Fassung ---------- */
 const BEREICHE_UE3 = [
-  {id:"spielen",      name:"Spielen",                               varc:"--spielen",      from:1,   to:38},
-  {id:"sprechen",     name:"Sprechen, Hören, Sehen",                varc:"--sprechen",     from:39,  to:61},
-  {id:"denken",       name:"Denken",                                varc:"--denken",       from:62,  to:90},
-  {id:"bewegung",     name:"Bewegung",                              varc:"--bewegung",     from:91,  to:114},
-  {id:"lebenspraxis", name:"Lebenspraxis",                          varc:"--lebenspraxis", from:115, to:143},
-  {id:"sozial",       name:"Soziales Miteinander / Emotionalität",  varc:"--sozial",       from:144, to:169},
+  {id:"spielen", name:"Spielen", varc:"--spielen", from:1, to:38},
+  {id:"sprechen", name:"Sprechen, Hören, Sehen", varc:"--sprechen", from:39, to:61},
+  {id:"denken", name:"Denken", varc:"--denken", from:62, to:90},
+  {id:"bewegung", name:"Bewegung", varc:"--bewegung", from:91, to:119},
+  {id:"lebenspraxis", name:"Lebenspraxis", varc:"--lebenspraxis", from:120, to:154},
+  {id:"sozial", name:"Soziales Miteinander / Emotionalität", varc:"--sozial", from:155, to:180},
 ];
 
 const ITEMS_UE3 = [
+  // Spielen
   [1,"Bezieht Spielzeug ein","spielt mit Bällen, Bausteinen oder Puppen passend zum Alter"],
   [2,"Probiert vieles aus","ist neugierig auf neues Material und wendet sich Neuem zu"],
   [3,"Ordnet nach Formen/Größen","sortiert Bausteine nach Form und Größe"],
@@ -505,7 +506,7 @@ const ITEMS_UE3 = [
   [7,"Wendet Erlerntes an","überträgt Gelerntes auf neue Situationen"],
   [8,"Handhabt techn. Spielzeug","versteht Spielzeug wie Bagger oder Aufziehauto"],
   [9,"Benutzt die Rutschbahn","klettert hoch und rutscht sicher hinunter"],
-  [10,"Benutzt den Kletterturm","klettert systematisch und sicher"],
+  [10,"Klettert auf Bäume","klettert sicher auf Bäume und Klettergerüste, wählt selbst, wie hoch"],
   [11,"Benutzt Dreirad o. Ä.","beherrscht die Handhabung eines Dreirads"],
   [12,"Benutzt Roller","fährt sicher und sachgemäß Roller"],
   [13,"Wasser, Sand, Kleister","geht offen mit flüssigen und matschigen Materialien um"],
@@ -534,6 +535,7 @@ const ITEMS_UE3 = [
   [36,"Medienkompetenz","geht altersgemäß mit Büchern, CD-Player oder Computer um"],
   [37,"Ausdauer im Spiel","spielt ein Gesellschaftsspiel bis zum Ende durch"],
   [38,"Konzentration ca. 30 Minuten","bleibt während einer Aufgabe konzentriert"],
+  // Sprechen, Hören, Sehen
   [39,"Hört Ansprache von hinten","reagiert auch ohne Blickkontakt auf seinen Namen"],
   [40,"Reagiert auf Flüstern","hört feine, leise Töne"],
   [41,"Erkennt Geräusche","ordnet Alltagsgeräusche wie Wecker oder Türklingel zu"],
@@ -557,6 +559,7 @@ const ITEMS_UE3 = [
   [59,"Erkennt Zusammenhänge","denkt mit ‚was wäre, wenn …?‘"],
   [60,"Ordnet Oberbegriffe zu","weiß, dass Apfel zum Obst und Tisch zu Möbeln gehört"],
   [61,"Grammatik richtig","spricht in Gegenwart, Vergangenheit und Zukunft korrekt"],
+  // Denken
   [62,"Ist neugierig","interessiert sich für vieles, schaut zu und fragt nach"],
   [63,"Überträgt Gelerntes","wendet Bekanntes flexibel in neuen Situationen an"],
   [64,"Tagesablauf","weiß, was zu welcher Tageszeit geschieht"],
@@ -586,10 +589,11 @@ const ITEMS_UE3 = [
   [88,"Zahlwortreihe bis 20","zählt sicher bis 20"],
   [89,"Größer/kleiner bis 10","versteht die Zahlenreihenfolge"],
   [90,"Malt geometrische Formen","zeichnet und benennt Kreis, Viereck, Dreieck"],
+  // Bewegung
   [91,"Bewegungsfreude","bewegt sich gerne und mit sichtbarem Spaß"],
   [92,"Krabbelt","krabbelt sicher – wichtig für die Koordination"],
-  [93,"Spielgeräte außen","nutzt Klettergerüst, Rutsche, Schaukel eigenständig"],
-  [94,"Bewegungsbaustelle","setzt Bälle, Kissen, Böcke kreativ ein"],
+  [93,"Nutzt das Waldgelände","nutzt Hänge, Baumstämme und Äste zum Klettern, Rutschen, Schaukeln"],
+  [94,"Bewegungsbaustelle aus Naturmaterial","setzt Äste, Stämme und Steine kreativ ein"],
   [95,"Testet seine Möglichkeiten","erprobt, wie schnell, hoch oder weit es kommt"],
   [96,"Fühlt sich wohl","wirkt körperlich präsent und sicher"],
   [97,"Raumgefühl","geht sicher und weicht Hindernissen aus"],
@@ -608,63 +612,76 @@ const ITEMS_UE3 = [
   [110,"Schneidet entlang einer Linie","führt die Schere präzise"],
   [111,"Schneidet Formen aus","folgt mit der Schere einer Kontur"],
   [112,"Hält Gleichgewicht","bleibt beim Balancieren stabil"],
-  [113,"Findet Räume wieder","orientiert sich sicher in der Kita"],
-  [114,"Schreibmaterial sicher","hält Stifte richtig und nutzt sie sachgerecht"],
-  [115,"Holt sich Hilfe","bittet aktiv um Unterstützung, statt aufzugeben"],
-  [116,"Zieht sich aus","legt Kleidung selbstständig ab"],
-  [117,"Zieht sich an","zieht sich ohne fremde Hilfe an"],
-  [118,"Isst selbstständig","nimmt Mahlzeiten eigenständig zu sich"],
-  [119,"Wäscht Hände","führt das Händewaschen ohne Anleitung aus"],
-  [120,"Trocknet Hände ab","trocknet sorgfältig ab"],
-  [121,"Putzt Zähne","übernimmt die Zahnpflege eigenständig"],
-  [122,"Toilette","geht selbstständig zur Toilette"],
-  [123,"Fegt","kennt die Technik des Fegens und führt sie allein aus"],
-  [124,"Räumt auf","räumt sein Spiel selbstständig weg"],
-  [125,"Trocknet Geschirr ab","trocknet Teller und Becher selbstständig"],
-  [126,"Tisch decken (mit Hilfe)","hilft beim Eindecken und ahmt das Vorgehen nach"],
-  [127,"Geschirr abräumen","sortiert Teller, Tassen, Besteck"],
-  [128,"Tisch allein decken","bereitet den Tisch komplett vor"],
-  [129,"Auftrag in Nachbargruppe","erfüllt einen Auftrag außerhalb der Gruppe"],
-  [130,"Findet Personen","kennt die Erwachsenen und Räume in der Kita"],
-  [131,"Spielt mit anderen Kindern","geht auf Kinder aus anderen Gruppen offen zu"],
-  [132,"Schuhe richtig anziehen","unterscheidet linken und rechten Schuh"],
-  [133,"Messer und Gabel","geht sicher mit dem Besteck um"],
-  [134,"Knöpft auf und zu","kann Knöpfe öffnen und schließen"],
-  [135,"Umgang mit Lebensmitteln","geht bewusst und wertschätzend mit Essen um"],
-  [136,"Reißverschluss","bedient den Reißverschluss eigenständig"],
-  [137,"Findet Kleidungsstücke","erkennt eigene Sachen wieder"],
-  [138,"Bindet Schleife","bindet eine Schleife – feinmotorisch anspruchsvoll"],
-  [139,"Versteht Symbole","erkennt Piktogramme, z. B. den roten Punkt für Stopp"],
-  [140,"Materialien unterscheiden","weich, hart, schwer, leicht"],
-  [141,"Hautkontakt o.k.","geht offen mit Wasser, Sand, Kleister um"],
-  [142,"Verkehrszeichen","leitet aus Symbolen Handlungen ab"],
-  [143,"Verkehrsregeln","kennt Ampel, Zebrastreifen, Geh- und Radweg"],
-  [144,"Trennt sich gut","kann sich gut von der Bezugsperson lösen"],
-  [145,"Kennt Gruppe & Erzieher","weiß, zu welcher Gruppe es gehört"],
-  [146,"Nimmt Kontakt an","schließt sich anderen Kindern an"],
-  [147,"Baut Beziehung auf","sucht den Kontakt zur Erzieherin"],
-  [148,"Höflichkeitsformen","sagt bitte, danke, guten Tag"],
-  [149,"Zeigt Empfindungen","bringt Freude, Trauer, Ärger zum Ausdruck"],
-  [150,"Emotionale Offenheit","zeigt seine Gefühle im Alltag"],
-  [151,"Nimmt Rücksicht","merkt, was im Umgang angemessen ist"],
-  [152,"Ist hilfsbereit","hilft aktiv mit, wenn etwas zu tun ist"],
-  [153,"Klärt sprachlich","trägt Konflikte verbal aus statt körperlich"],
-  [154,"Integriert sich","fühlt sich in der Gruppe wohl"],
-  [155,"Arbeit in Kleingruppe","kann sich in kleinerer Runde konzentrieren"],
-  [156,"Bildet Freundschaften","sucht Spielpartner bewusst aus"],
-  [157,"Achtet fremdes Eigentum","geht sorgsam mit den Sachen anderer um"],
-  [158,"Achtet eigene Sachen","findet seine Dinge wieder und geht gut damit um"],
-  [159,"Behält Übersicht","bleibt orientiert, auch wenn viel passiert"],
-  [160,"Kooperativ bei Konflikten","sucht gemeinsame Lösungen"],
-  [161,"Hält Spannung aus","kann ungewohnte Situationen ertragen"],
-  [162,"Teilt Gefühle mit","spricht über seine Empfindungen"],
-  [163,"Stellt Wünsche zurück","kann warten, wenn etwas nicht sofort geht"],
-  [164,"Benennt Ängste","spricht aus, wovor es Angst hat"],
-  [165,"Soziales Verhalten","übernimmt Aufgaben für die Gruppe"],
-  [166,"Ergreift Partei","setzt sich für andere Kinder ein"],
-  [167,"Schlägt Lösungen vor","macht eigene Vorschläge bei Konflikten"],
-  [168,"Freut sich auf die Schule","stellt sich auf die neue Aufgabe ein"],
-  [169,"Pos. Selbstwertgefühl","ist von sich überzeugt und empathisch"],
+  [113,"Findet Plätze im Wald wieder","orientiert sich sicher an den festen Plätzen im Waldgelände"],
+  [114,"Schnitzt unter Anleitung","nutzt das Schnitzmesser sicher, nach fester Regel"],
+  [115,"Sägt unter Anleitung","nutzt die Handsäge sicher"],
+  [116,"Hämmert unter Anleitung","nutzt Hammer und Nagel zielgerichtet"],
+  [117,"Schraubt unter Anleitung","nutzt den Schraubendreher sicher"],
+  [118,"Räumt Werkzeug sicher weg","legt Schnitzmesser, Säge, Hammer und Schraubendreher nach Gebrauch an den vorgesehenen Platz"],
+  [119,"Schreibmaterial sicher","hält Stifte richtig und nutzt sie sachgerecht"],
+  // Lebenspraxis
+  [120,"Holt sich Hilfe","bittet aktiv um Unterstützung, statt aufzugeben"],
+  [121,"Zieht sich aus","legt Kleidung selbstständig ab"],
+  [122,"Zieht sich an","zieht sich ohne fremde Hilfe an"],
+  [123,"Isst selbstständig","nimmt Mahlzeiten eigenständig zu sich"],
+  [124,"Wäscht Hände","führt das Händewaschen ohne Anleitung aus"],
+  [125,"Trocknet Hände ab","trocknet sorgfältig ab"],
+  [126,"Spürt Wetter am eigenen Körper","merkt und sagt, wenn es friert, schwitzt oder nass wird"],
+  [127,"Kleidet sich wettergerecht","mit Unterstützung, zunehmend selbstständig"],
+  [128,"Putzt Zähne","übernimmt die Zahnpflege eigenständig"],
+  [129,"Toilette","geht selbstständig zur Toilette"],
+  [130,"Fegt","kennt die Technik des Fegens und führt sie allein aus"],
+  [131,"Räumt auf","räumt sein Spiel selbstständig weg"],
+  [132,"Trocknet Geschirr ab","trocknet Teller und Becher selbstständig"],
+  [133,"Tisch decken (mit Hilfe)","hilft beim Eindecken und ahmt das Vorgehen nach"],
+  [134,"Geschirr abräumen","sortiert Teller, Tassen, Besteck"],
+  [135,"Tisch allein decken","bereitet den Tisch komplett vor"],
+  [136,"Auftrag in Nachbargruppe","erfüllt einen Auftrag außerhalb der Gruppe"],
+  [137,"Findet Personen","kennt die Erwachsenen und Räume in der Kita"],
+  [138,"Spielt mit anderen Kindern","geht auf Kinder aus anderen Gruppen offen zu"],
+  [139,"Schuhe richtig anziehen","unterscheidet linken und rechten Schuh"],
+  [140,"Messer und Gabel","geht sicher mit dem Besteck um"],
+  [141,"Knöpft auf und zu","kann Knöpfe öffnen und schließen"],
+  [142,"Umgang mit Lebensmitteln","geht bewusst und wertschätzend mit Essen um"],
+  [143,"Reißverschluss","bedient den Reißverschluss eigenständig"],
+  [144,"Findet Kleidungsstücke","erkennt eigene Sachen wieder"],
+  [145,"Bindet Schleife","bindet eine Schleife – feinmotorisch anspruchsvoll"],
+  [146,"Versteht Symbole","erkennt Piktogramme, z. B. den roten Punkt für Stopp"],
+  [147,"Materialien unterscheiden","weich, hart, schwer, leicht"],
+  [148,"Matsch, Erde, Rinde","geht offen mit Matsch, Moos und Naturmaterial um"],
+  [149,"Verkehrszeichen","leitet aus Symbolen Handlungen ab"],
+  [150,"Verkehrsregeln","kennt Ampel, Zebrastreifen, Geh- und Radweg"],
+  [151,"Hält Sicht- und Rufweite","bleibt in vereinbarter Entfernung zur Gruppe"],
+  [152,"Reagiert auf das Sammelsignal","kommt zuverlässig zum vereinbarten Zeichen zurück"],
+  [153,"Erkennt Gefahrenstellen","meidet Dornen, Brennnesseln, unbekannte Beeren und Pilze auf Hinweis"],
+  [154,"Bewältigt längere Wegstrecken","legt zunehmend weitere Strecken im Gelände zu Fuß zurück"],
+  // Soziales Miteinander / Emotionalität
+  [155,"Trennt sich gut","kann sich gut von der Bezugsperson lösen"],
+  [156,"Kennt Gruppe & Erzieher","weiß, zu welcher Gruppe es gehört"],
+  [157,"Nimmt Kontakt an","schließt sich anderen Kindern an"],
+  [158,"Baut Beziehung auf","sucht den Kontakt zur Erzieherin"],
+  [159,"Höflichkeitsformen","sagt bitte, danke, guten Tag"],
+  [160,"Zeigt Empfindungen","bringt Freude, Trauer, Ärger zum Ausdruck"],
+  [161,"Emotionale Offenheit","zeigt seine Gefühle im Alltag"],
+  [162,"Nimmt Rücksicht","merkt, was im Umgang angemessen ist"],
+  [163,"Ist hilfsbereit","hilft aktiv mit, wenn etwas zu tun ist"],
+  [164,"Klärt sprachlich","trägt Konflikte verbal aus statt körperlich"],
+  [165,"Integriert sich","fühlt sich in der Gruppe wohl"],
+  [166,"Arbeit in Kleingruppe","kann sich in kleinerer Runde konzentrieren"],
+  [167,"Bildet Freundschaften","sucht Spielpartner bewusst aus"],
+  [168,"Achtet fremdes Eigentum","geht sorgsam mit den Sachen anderer um"],
+  [169,"Achtet eigene Sachen","findet seine Dinge wieder und geht gut damit um"],
+  [170,"Behält Übersicht","bleibt orientiert, auch wenn viel passiert"],
+  [171,"Kooperativ bei Konflikten","sucht gemeinsame Lösungen"],
+  [172,"Hält Spannung aus","kann ungewohnte Situationen ertragen"],
+  [173,"Teilt Gefühle mit","spricht über seine Empfindungen"],
+  [174,"Stellt Wünsche zurück","kann warten, wenn etwas nicht sofort geht"],
+  [175,"Benennt Ängste","spricht aus, wovor es Angst hat"],
+  [176,"Soziales Verhalten","übernimmt Aufgaben für die Gruppe"],
+  [177,"Ergreift Partei","setzt sich für andere Kinder ein"],
+  [178,"Schlägt Lösungen vor","macht eigene Vorschläge bei Konflikten"],
+  [179,"Freut sich auf die Schule","stellt sich auf die neue Aufgabe ein"],
+  [180,"Pos. Selbstwertgefühl","ist von sich überzeugt und empathisch"],
 ];
 
 /* ---------- Katalog 0–3 Jahre: Kernkatalog 1;0–2;11 Jahre, 123 Beobachtungspunkte ---------- */
