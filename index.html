@@ -238,6 +238,17 @@
   .pf-chip b{font-weight:700; opacity:.65; font-size:9.5px}
   .pf-alldone{padding:10px 4px; color:#666; font-size:12.5px; text-align:center}
 
+  /* Hinweisfenster (Druck auf iPhone/iPad, Rückfrage nach dem Speichern) */
+  .hinweis-dialog{max-width:460px; width:calc(100% - 32px); border:none; border-radius:14px; padding:18px 18px 14px;
+    color:var(--ink); box-shadow:0 12px 40px rgba(0,0,0,.25)}
+  .hinweis-dialog::backdrop{background:rgba(0,0,0,.35)}
+  .hinweis-dialog h2{font-size:17px; margin:0 0 10px; line-height:1.3}
+  .hinweis-dialog p{font-size:14px; margin:0 0 10px; white-space:pre-line}
+  .hinweis-dialog .hd-url{font-size:13px; word-break:break-all; background:#f1f3f2; padding:7px 9px; border-radius:6px;
+    -webkit-user-select:all; user-select:all}
+  .hd-buttons{display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end; margin-top:14px}
+  .hd-buttons button{min-height:44px}
+
   /* print – Elternblatt: genau eine Hochformat-Seite; Fachkraft-Blatt: darf mehrseitig sein */
   /* ---------- Tablet (≤760px): Kopfzeile darf umbrechen, größere Tippflächen ----------
      Muss NACH den Basisregeln stehen: bei gleicher Spezifität gewinnt sonst die spätere,
@@ -277,10 +288,17 @@
     #offenePanel .oitem{ flex-wrap:wrap; row-gap:4px }
   }
 
+  /* ---------- Kleine Bildschirme: Kopfzeile scrollt mit weg ----------
+     Mitlaufend belegte sie auf dem iPhone rund ein Drittel der Höhe (hochkant 287 von
+     812 px), im Querformat noch mehr. Die Knöpfe sind oben auf der Seite ja weiterhin da. */
+  @media (max-width:560px), (max-height:500px){
+    header.app{ position:static }
+  }
+
   @media print{
     *{-webkit-print-color-adjust:exact; print-color-adjust:exact}
     @page{size:A4 portrait; margin:10mm}
-    header.app, .kidbar, .footer-note, .noprint, .toolbar, .layout, input[type="file"]{display:none !important}
+    header.app, .kidbar, .footer-note, .noprint, .toolbar, .layout, input[type="file"], .hinweis-dialog{display:none !important}
     body{background:#fff}
     #printHead, #printFach{display:none !important}
     body.printing-eltern #printHead{display:block !important; page-break-inside:avoid}
@@ -317,6 +335,12 @@
 
 <input type="file" id="fileLogo" accept="image/*" hidden>
 <input type="file" id="fileOpen" accept="application/json,.json" hidden>
+
+<dialog id="hinweisDialog" class="hinweis-dialog" aria-labelledby="hdTitel">
+  <h2 id="hdTitel"></h2>
+  <div id="hdText"></div>
+  <div class="hd-buttons" id="hdButtons"></div>
+</dialog>
 
 <div id="printHead">
   <div class="ph-top">
@@ -1416,16 +1440,31 @@ async function speichern(){
       ok = true;
     }
   }catch(err){ if(err && err.name==="AbortError") return; }
-  if(!ok){
-    const blob = new Blob([json],{type:"application/json"});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href=url; a.download=dateiname(); document.body.appendChild(a); a.click();
-    a.remove(); URL.revokeObjectURL(url);
+  if(ok){
+    // Speichern-Dialog des Systems hat die Datei nachweislich geschrieben
+    leeren();
+    alert("Gespeichert. Das Formular ist jetzt leer für das nächste Kind.");
+    return;
   }
-  // nach dem Speichern: alles leeren
-  leeren();
-  alert("Gespeichert. Das Formular ist jetzt leer für das nächste Kind.");
+  const blob = new Blob([json],{type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href=url; a.download=dateiname(); document.body.appendChild(a); a.click();
+  a.remove();
+  // Nicht sofort freigeben: Safari startet den Download erst nach seiner Rückfrage
+  // und findet die Datei sonst nicht mehr.
+  setTimeout(()=> URL.revokeObjectURL(url), 60000);
+  // Ob der Download wirklich angekommen ist, erfährt die Seite nicht (auf dem iPhone kann
+  // man ihn z. B. abbrechen). Deshalb erst nach Bestätigung leeren – vorher gingen hier
+  // Formular und Entwurf verloren, auch wenn gar keine Datei entstanden war.
+  await new Promise(r=> setTimeout(r, 400));
+  const leeren_ok = await zeigeDialog(
+    "Wurde die Datei gespeichert?",
+    [`Die Datei „${dateiname()}“ wurde zum Speichern angeboten. Auf dem iPhone fragt der Browser erst nach, ob sie geladen werden soll.`,
+     "Das Formular wird erst geleert, wenn die Datei wirklich gespeichert ist."],
+    [{text:"Nein, Formular behalten", wert:false}, {text:"Ja, Formular leeren", wert:true, primary:true}]
+  );
+  if(leeren_ok) leeren();
 }
 
 function oeffnen(file){
@@ -1446,7 +1485,7 @@ function oeffnen(file){
       wohlbefinden = a.wohlbefinden ?? null;
       engagiertheit = a.engagiertheit ?? null;
       syncSkalen();
-      verlauf = Array.isArray(d.verlauf)? d.verlauf : [];
+      verlauf = bereinigeVerlauf(d.verlauf);
       const bt2 = document.getElementById("berichtText");
       if(bt2) bt2.value = "";   // Bericht gehört zum vorher geladenen Kind
       aktualisiereBand();
@@ -1463,6 +1502,14 @@ function oeffnen(file){
 // Katalog eines Verlaufseintrags. Alte Dateien (version 1) kennen das Feld nicht –
 // die stammen immer aus dem 3-6-Jahre-Katalog.
 function katalogVon(eintrag){ return (eintrag && eintrag.katalog === "u3") ? "u3" : "ue3"; }
+
+// Verlauf aus einer Datei nur mit echten Datumsangaben (JJJJ-MM-TT) übernehmen. Die App
+// selbst schreibt nie etwas anderes; alles andere ist beschädigt oder manipuliert und
+// könnte sonst als HTML in die Seite geraten.
+function bereinigeVerlauf(liste){
+  if(!Array.isArray(liste)) return [];
+  return liste.filter(e=> e && typeof e === "object" && /^\d{4}-\d{2}-\d{2}$/.test(e.datum));
+}
 
 function renderVerlauf(){
   const el = document.getElementById("verlaufList");
@@ -1846,7 +1893,11 @@ function berechneVergleich(){
 function fuelleVergleich(wrap, v){
   wrap.innerHTML="";
   if(v.neuSicher.length===0 && v.neuWerden.length===0 && v.rueck.length===0){
-    wrap.innerHTML = `<div class="pf-vgl-leer">Keine Veränderungen gegenüber der Beobachtung vom ${fmtDate(v.basis.datum)}.</div>`;
+    // textContent statt innerHTML: das Datum stammt aus einer geöffneten Datei
+    const leer = document.createElement("div");
+    leer.className = "pf-vgl-leer";
+    leer.textContent = `Keine Veränderungen gegenüber der Beobachtung vom ${fmtDate(v.basis.datum)}.`;
+    wrap.appendChild(leer);
     return;
   }
   const gruppe = (titel, items, solid)=>{
@@ -1990,17 +2041,83 @@ function syncPrintFach(){
   }
 }
 
+/* ---------- Hinweisfenster ----------
+   Zeigt Titel, Absätze und Knöpfe; liefert den Wert des gewählten Knopfs (Schließen per
+   Escape: null). Texte nur über textContent. Ohne <dialog>-Unterstützung: confirm/alert. */
+function zeigeDialog(titel, absaetze, knoepfe, extra){
+  const dlg = document.getElementById("hinweisDialog");
+  if(!dlg || typeof dlg.showModal !== "function"){
+    const text = [titel, ...absaetze, extra ? extra.textContent : ""].filter(Boolean).join("\n\n");
+    const wahl = knoepfe.filter(k=> !k.aktion);   // Zusatzknöpfe wie „Kopieren“ gibt es hier nicht
+    if(wahl.length > 1) return Promise.resolve(confirm(text) ? wahl[wahl.length-1].wert : wahl[0].wert);
+    alert(text); return Promise.resolve(wahl[0] ? wahl[0].wert : null);
+  }
+  document.getElementById("hdTitel").textContent = titel;
+  const textEl = document.getElementById("hdText");
+  textEl.innerHTML = "";
+  absaetze.forEach(t=>{ const p=document.createElement("p"); p.textContent=t; textEl.appendChild(p); });
+  if(extra) textEl.appendChild(extra);
+  const leiste = document.getElementById("hdButtons");
+  leiste.innerHTML = "";
+  return new Promise(resolve=>{
+    let ergebnis = null;
+    knoepfe.forEach(k=>{
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = k.text;
+      if(k.primary) b.className = "primary";
+      b.addEventListener("click", ()=>{
+        if(k.aktion){ k.aktion(b); if(!k.schliesst) return; }
+        ergebnis = k.wert; dlg.close();
+      });
+      leiste.appendChild(b);
+    });
+    dlg.addEventListener("close", ()=> resolve(ergebnis), {once:true});
+    dlg.showModal();
+  });
+}
+
+/* ---------- Drucken auf iPhone/iPad ----------
+   Vom Home-Bildschirm gestartet (Vollbild-Web-App) ignoriert iOS window.print() ohne
+   jede Meldung – der Knopf wirkte dadurch kaputt. In Safari selbst geht Drucken.
+   navigator.standalone gibt es nur bei Apple; die Touch-Abfrage lässt Web-Apps im
+   Mac-Dock außen vor, die drucken können. */
+function istIosHomeApp(){
+  return navigator.standalone === true && navigator.maxTouchPoints > 1;
+}
+function zeigeDruckHinweis(){
+  const adresse = location.origin + location.pathname.replace(/index\.html$/, "");
+  const url = document.createElement("p");
+  url.className = "hd-url";
+  url.textContent = adresse;
+  zeigeDialog(
+    "Drucken geht hier leider nicht",
+    ["iPhone und iPad lassen Apps, die vom Home-Bildschirm gestartet werden, nicht drucken. Der Knopf ist nicht kaputt – iOS ignoriert den Druckbefehl an dieser Stelle.",
+     "So klappt es:\n1. Hier „Kind speichern“.\n2. Die Adresse unten in Safari öffnen.\n3. Dort „Öffnen“ tippen, die gespeicherte Datei wählen und drucken.",
+     "Safari und die Home-Bildschirm-App haben getrennte Speicher, deshalb der Weg über die Datei.",
+     "Tipp: Neuere iOS-Versionen bieten beim Hinzufügen zum Home-Bildschirm den Schalter „Als Web-App öffnen“. Ist er aus, startet das Icon in Safari – dann funktioniert Drucken direkt."],
+    [{text:"Adresse kopieren", schliesst:false, aktion:async b=>{
+        try{ await navigator.clipboard.writeText(adresse); b.textContent = "Adresse kopiert ✓"; }
+        catch(e){ b.textContent = "Bitte Adresse von Hand kopieren"; }
+      }},
+     {text:"Schließen", wert:null, primary:true}],
+    url
+  );
+}
+
 /* ---------- Buttons ---------- */
 document.getElementById("btnSave").addEventListener("click", speichern);
 document.getElementById("btnOpen").addEventListener("click", ()=> document.getElementById("fileOpen").click());
 document.getElementById("fileOpen").addEventListener("change", e=>{ if(e.target.files[0]) oeffnen(e.target.files[0]); e.target.value=""; });
 document.getElementById("btnPrint").addEventListener("click", ()=>{
+  if(istIosHomeApp()){ zeigeDruckHinweis(); return; }
   document.body.classList.remove("printing-fach");
   document.body.classList.add("printing-eltern");
   syncPrint();
   window.print();
 });
 document.getElementById("btnPrintFach").addEventListener("click", ()=>{
+  if(istIosHomeApp()){ zeigeDruckHinweis(); return; }
   document.body.classList.remove("printing-eltern");
   document.body.classList.add("printing-fach");
   syncPrintFach();
@@ -2159,6 +2276,16 @@ function markiereGeaendert(){
 document.addEventListener("input", markiereGeaendert);
 document.addEventListener("change", markiereGeaendert);
 
+// iOS beendet Home-Bildschirm-Apps im Hintergrund ohne beforeunload. Deshalb beim
+// Wegwechseln sofort sichern, statt auf die 800 ms Verzögerung zu warten.
+function entwurfSofortSichern(){
+  if(!ungespeichert) return;
+  clearTimeout(entwurfTimer);
+  entwurfSchreiben();
+}
+document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState === "hidden") entwurfSofortSichern(); });
+window.addEventListener("pagehide", entwurfSofortSichern);
+
 window.addEventListener("beforeunload", e=>{
   if(!ungespeichert) return;
   e.preventDefault();
@@ -2199,7 +2326,7 @@ function entwurfAnbieten(){
   wohlbefinden = a.wohlbefinden ?? null;
   engagiertheit = a.engagiertheit ?? null;
   syncSkalen();
-  verlauf = Array.isArray(d.verlauf) ? d.verlauf : [];
+  verlauf = bereinigeVerlauf(d.verlauf);
   aktualisiereBand();
   renderVerlauf();
   renderListe();

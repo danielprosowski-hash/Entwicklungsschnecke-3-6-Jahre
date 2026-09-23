@@ -9,7 +9,7 @@
    Bei jeder Änderung an der App CACHE_VERSION hochzählen, damit alte Stände
    zuverlässig ersetzt werden. */
 
-const CACHE_VERSION = "v1";
+const CACHE_VERSION = "v2";
 const CACHE_NAME = `entwicklungsschnecke-${CACHE_VERSION}`;
 
 const APP_SHELL = [
@@ -51,8 +51,12 @@ self.addEventListener("fetch", event => {
     event.respondWith(
       fetch(req)
         .then(res => {
-          const kopie = res.clone();
-          caches.open(CACHE_NAME).then(c => c.put("./index.html", kopie));
+          // Nur eine echte App-Seite ablegen – eine Fehlerseite (404/500) würde sonst
+          // offline statt der App erscheinen.
+          if(res && res.ok){
+            const kopie = res.clone();
+            caches.open(CACHE_NAME).then(c => c.put("./index.html", kopie));
+          }
           return res;
         })
         .catch(() => caches.match("./index.html")
