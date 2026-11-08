@@ -1830,6 +1830,9 @@ function syncPrint(){
   renderStatsInto(document.getElementById("phStats"));
 }
 window.addEventListener("beforeprint", ()=>{
+  // Kam der Druck über einen unserer Knöpfe, ist das Blatt schon aufgebaut. Ein zweiter
+  // Umbau mitten im laufenden Druck lässt Safari beim Abbrechen hängen (siehe drucke()).
+  if(druckLaeuft) return;
   // Falls per Ctrl+P/Cmd+P gedruckt wird, synct das gerade aktive Blatt
   if(document.body.classList.contains("printing-fach")) syncPrintFach(); else syncPrint();
 });
@@ -2109,24 +2112,63 @@ function zeigeDruckHinweis(){
 document.getElementById("btnSave").addEventListener("click", speichern);
 document.getElementById("btnOpen").addEventListener("click", ()=> document.getElementById("fileOpen").click());
 document.getElementById("fileOpen").addEventListener("change", e=>{ if(e.target.files[0]) oeffnen(e.target.files[0]); e.target.value=""; });
-document.getElementById("btnPrint").addEventListener("click", ()=>{
-  if(istIosHomeApp()){ zeigeDruckHinweis(); return; }
+/* ---------- Drucken ----------
+   Safari (auch als Web-App im Dock) hat einen bekannten Fehler: Wird das Druckfenster
+   abgebrochen oder aus der PDF-Vorschau zurückgegangen, kann die Seite danach hängen,
+   besonders wenn sofort wieder gedruckt wird (WebKit-Bug 225178). Die App hat das
+   verstärkt: Das Blatt wurde beim Klick UND noch einmal in beforeprint neu aufgebaut,
+   also während Safari schon die Seiten berechnete, und window.print() kam im selben
+   Moment wie der Umbau. Deshalb jetzt:
+   - Blatt genau einmal aufbauen, dann dem Browser ein Bild Zeit geben, erst dann drucken.
+   - Solange ein Druck läuft, werden weitere Klicks auf die Druckknöpfe ignoriert.
+   - Nach dem Druck (oder Abbruch) wird alles zuverlässig zurückgesetzt, auch wenn Safari
+     kein afterprint meldet. */
+let druckLaeuft = false;
+let druckSperreTimer = null;
+
+function druckZuruecksetzen(){
+  druckLaeuft = false;
+  clearTimeout(druckSperreTimer);
   document.body.classList.remove("printing-fach");
   document.body.classList.add("printing-eltern");
-  syncPrint();
-  window.print();
-});
-document.getElementById("btnPrintFach").addEventListener("click", ()=>{
+  ["btnPrint","btnPrintFach"].forEach(id=>{ const b=document.getElementById(id); if(b) b.disabled=false; });
+}
+
+function drucke(art){
   if(istIosHomeApp()){ zeigeDruckHinweis(); return; }
-  document.body.classList.remove("printing-eltern");
-  document.body.classList.add("printing-fach");
-  syncPrintFach();
-  window.print();
-});
+  if(druckLaeuft) return;
+  druckLaeuft = true;
+  ["btnPrint","btnPrintFach"].forEach(id=>{ const b=document.getElementById(id); if(b) b.disabled=true; });
+  // Notbremse: Meldet der Browser das Druckende nie, sind die Knöpfe spätestens
+  // nach einer Minute wieder frei, statt die App dauerhaft zu sperren.
+  druckSperreTimer = setTimeout(druckZuruecksetzen, 60000);
+
+  if(art === "fach"){
+    document.body.classList.remove("printing-eltern");
+    document.body.classList.add("printing-fach");
+    syncPrintFach();
+  }else{
+    document.body.classList.remove("printing-fach");
+    document.body.classList.add("printing-eltern");
+    syncPrint();
+  }
+  // Erst drucken, wenn der Umbau fertig ist. Ein kurzer Timer statt requestAnimationFrame,
+  // weil Safari den Druck nur innerhalb kurzer Zeit nach dem Klick als „vom Nutzer
+  // ausgelöst“ wertet und sonst eine Rückfrage zeigt.
+  setTimeout(()=>{
+    try{ window.print(); }
+    catch(e){ druckZuruecksetzen(); }
+  }, 60);
+}
+
+document.getElementById("btnPrint").addEventListener("click", ()=> drucke("eltern"));
+document.getElementById("btnPrintFach").addEventListener("click", ()=> drucke("fach"));
 window.addEventListener("afterprint", ()=>{
-  document.body.classList.remove("printing-fach");
-  document.body.classList.add("printing-eltern");
+  // Kurz warten: Safari meldet afterprint teils, bevor das Druckfenster ganz weg ist.
+  setTimeout(druckZuruecksetzen, 300);
 });
+// Kehrt man aus dem Druck- oder Vorschaufenster zurück, bekommt die App den Fokus wieder.
+window.addEventListener("focus", ()=>{ if(druckLaeuft) setTimeout(druckZuruecksetzen, 300); });
 document.getElementById("btnNeu").addEventListener("click", ()=>{
   if(confirm("Formular leeren? Nicht gespeicherte Eingaben gehen verloren.")) leeren();
 });

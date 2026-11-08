@@ -9,7 +9,7 @@
    Bei jeder Änderung an der App CACHE_VERSION hochzählen, damit alte Stände
    zuverlässig ersetzt werden. */
 
-const CACHE_VERSION = "v2";
+const CACHE_VERSION = "v3";
 const CACHE_NAME = `entwicklungsschnecke-${CACHE_VERSION}`;
 
 const APP_SHELL = [
